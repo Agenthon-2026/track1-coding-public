@@ -1,0 +1,47 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-dcc-garch-portfolio-var",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/fetch_data.py",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "73fd3ccece4b2f33317307a97b168104c5616a8a58218589163cc790e54fdf79",
+      "bytes": 838,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/prices.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "b120c97d845502e5018cfca79313ab8c7c2f3c6be6a0a2ae96379c4924fff495",
+      "bytes": 205950,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/weights.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "7a79295c46759688cac7b278c760071ebcee07a1ee60e0c423942f704d3d1c08",
+      "bytes": 63,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

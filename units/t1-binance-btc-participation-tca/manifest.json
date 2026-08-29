@@ -1,0 +1,73 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-binance-btc-participation-tca",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/order_spec.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "58f389a4a730d3762cb57e07858d944170b50a676556771331ee8afb2314f466",
+      "bytes": 282,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/provenance.md",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "d294b8ca21dab23a4e55ea19dc2d2582f96261eddd84cdc9c6583a12ae441731",
+      "bytes": 1526,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/quotes.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "2ad54b04f4c586f258f3aca6ebfca4bf99b597698f244f645f87f8722c82527d",
+      "bytes": 7844210,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/tca_rules.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "f41d30d955c8a4203d4e5affd493d212fdec240bbe7ed6451a20a8b2eb8f49a1",
+      "bytes": 644,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/trades.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "cc5d413681c1e75586cd014c24e314475a1a1d080c9833e8365ec1e5c4b19314",
+      "bytes": 300110,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

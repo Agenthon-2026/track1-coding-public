@@ -1,0 +1,60 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-delta-hedging-pnl-simulation",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/dividends.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "58799a76fddd466b344f6af661c88d18bd3dee5cda56ade7c99d9593e5ccbf9f",
+      "bytes": 34,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/fee_schedule.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "ab9e9d8051415edfd5d4d5de2f53e9f33ea95f5b877607d219fdf9a65abebc33",
+      "bytes": 37,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/iv_path.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "f07b423c2f465dab7caebe63ae7976d344301f0b1eb87d746067e9c51eb6d57e",
+      "bytes": 3157,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/stock_path.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "5469da4a2e4a347420d9d4ecc855f81861072ebd0aa1a551b9602b3d4827ed61",
+      "bytes": 2952,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

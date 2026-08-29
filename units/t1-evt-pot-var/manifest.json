@@ -1,0 +1,47 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-evt-pot-var",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/formulas.md",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "bf7a77e5bf1f81d5f61dd29223b4695e3c3ed4e22d16f197c5f8e64085d01edb",
+      "bytes": 2659,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/params.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "b34a71f87aa026e421170023cc55a529bcacd494623e587b667aea7e579c0119",
+      "bytes": 197,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/sp500.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "38b317fbd2241d8b6eb2e863f809eec586fee36f07ad86d8fe0a99dc13abd718",
+      "bytes": 33007,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

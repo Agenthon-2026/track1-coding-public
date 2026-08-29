@@ -1,0 +1,34 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-historical-var-data-prep",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/returns_raw.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "9dcb456814ae2a68d67152c5375fce36b519813346244646fcc389655b9e0d4b",
+      "bytes": 190942,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/trading_calendar.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "6eaf97caa48784612f5a0cecaa812056794b92a3907baa061135291a5771a6dc",
+      "bytes": 19365,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

@@ -1,0 +1,21 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-pca-factor-portfolio",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/params.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "c76a4568b1ad9d2633f2a5bc0afd799b32d5ccd2bd624f050c36eaefd735e591",
+      "bytes": 18236,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

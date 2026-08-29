@@ -1,0 +1,21 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-earnings-surprise-calculator",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/earnings.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "9c5d5baaee4625caeef212194b85cdf4cddcae90193c8717ff0a00b083662d46",
+      "bytes": 2779,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

@@ -1,0 +1,60 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-event-study-earnings",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/events.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "69092f15b554c31df01bfc5c7d6280b3039d857982e1afcda2538bd98e8d4f44",
+      "bytes": 1250,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/fetch_data.py",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "0f502f05ff037c15304d4566219adbd4b0c2f2811518d0ddddf5b96d639fc9bd",
+      "bytes": 3741,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/market_prices.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "19b545758ad64d587ef59a702a9e91fa0d97b44f05281b34667b5c8fcaa1f0cc",
+      "bytes": 43986,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/stock_prices.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "d1a8b0f6377d4960cff268652b90dd36064cb23fff15d14d503fa3a31278b7c1",
+      "bytes": 154868,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

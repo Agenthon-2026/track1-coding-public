@@ -1,0 +1,73 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-fx-forward-cross-rate",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/deposit_rates.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "792fce5e4ae457fed5b7ef5b6dfce1998480a9e588c3c5415b2b0822eb40173a",
+      "bytes": 211,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/historical_spots.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "a7cb3d4c3d1c35b34b60f62b1b1665db0f7b6c63956a112219091dbe776b41c5",
+      "bytes": 101,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/params.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "6446c24a3faeb2401ff5a32cbbf4a6dec8a1efaa216333bddfd0231f51c34248",
+      "bytes": 615,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/portfolio.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "33d75f753f92533098cb0aa0df8cd800b41e9bd1a1346ef24085915854fd3a15",
+      "bytes": 323,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/spot_rates.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "6f56047c124309a1cc66c9eb53f87bd4116b5a5c3374307f239ca35c23404816",
+      "bytes": 302,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

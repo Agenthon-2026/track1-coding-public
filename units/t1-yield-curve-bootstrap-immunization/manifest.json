@@ -1,0 +1,60 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-yield-curve-bootstrap-immunization",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/bonds.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "1f8062cc676357cd53afa1afa35b89f6897025fed34acd9f8240fcf1e83136d5",
+      "bytes": 110,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/fetch_data.py",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "3efe0e6508f6c2235f563c144c7a42205f18ca81bfa7cbfe9b7f402e37083bdd",
+      "bytes": 1592,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/liability.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "bacd609ebb2818ea68fc783766d203df2f0db39e1734a00db50d7cab73436faa",
+      "bytes": 274,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/par_yields.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "8818656b7bbffad8ebaea62c39b2cf20aef538bc360a75bc617d8378b47a8cb4",
+      "bytes": 115,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

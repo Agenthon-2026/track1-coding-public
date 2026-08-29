@@ -1,0 +1,47 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-fomc-tone-event-study",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/fomc_statements.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "883f5df3291edc9b94febba032a43d0445d9c30973c0473d2e00d17efdf52b97",
+      "bytes": 7548,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/tone_lexicon.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "7c01fd815f895d52c49bc4bbcea453a097f6a0ed6612da27f19e5384a96d8cc7",
+      "bytes": 534,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/treasury_yields.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "8cdb65ac79ab037addbcf9be0fdc83a992a158c65a7686fc29faa9d6c45a06d5",
+      "bytes": 26067,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

@@ -1,0 +1,21 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-realized-vol-estimators",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/spy_intraday.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "481bc061f499cbf42d88149840e1ae807c3553bbe2d04e71d5e47c8b35be3919",
+      "bytes": 119068,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

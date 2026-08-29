@@ -1,0 +1,21 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-momentum-backtest",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/spy_prices.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "76a42553e2f3a7112ca872ca5e37b62a5811b1ea5fa7ef4b6d169a088e95c226",
+      "bytes": 412113,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

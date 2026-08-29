@@ -1,0 +1,47 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-ewma-portfolio-risk-decomposition",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/params.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "bbb67660db48282f8295e3e78187b1bfe2dc9086d161a053d044de0fc4b07e58",
+      "bytes": 201,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/returns.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "83da67dc5bec022b6d7db5824c9ba392d2575ec575286870bddfbce4fe067f85",
+      "bytes": 209785,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/template.py",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "602835eeed18b36a9d7fe24fc9a2461e74010e672c32b340e156de62b434b8fc",
+      "bytes": 2301,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

@@ -1,0 +1,34 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-spread-option-kirk-margrabe",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/aapl_daily.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "f3c40e4a0f2c7de12642671b0ad26c06dedd1aa250862209e628cdd3621cc0b8",
+      "bytes": 31585,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/msft_daily.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "3fb3223e1bc0773cd48ecf5a16f70ca185c187069a73aa6696dcbb6ca2c1df4e",
+      "bytes": 31314,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

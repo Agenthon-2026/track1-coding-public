@@ -1,0 +1,47 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-brinson-sector-attribution",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/cash_rates.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "3058e0c60580f9c4fefdf98d4c73f1cf6ed4d097d331c71fe2b23567b3fb60e9",
+      "bytes": 210,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/params.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "83fadb5f8ea353aacbbd1d649cf3616a7fc62664946b605ca374a71081c22a5e",
+      "bytes": 1346,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/sector_etfs.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "7f71db78f87d88dd9888ff8ad71b3d2a0550fc9c6af12c568ccdd4565b598401",
+      "bytes": 211982,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

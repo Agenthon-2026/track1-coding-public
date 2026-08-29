@@ -1,0 +1,60 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-regime-riskparity-cvar",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/glossary.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "ebc0c49aea8d24b7dc3bf788cfb8acf0d1fd5cfd9c2ef4c4c6160f2f934b174b",
+      "bytes": 918531,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/params.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "58a366f801106d3cac6f4a01bfee0e400fa8358f68c5b5ca11e16c2a6cde56c1",
+      "bytes": 288,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/returns.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "e7d8ab7842f20cdf2d52ccc8499e64f296ed2f4c1a61025bee88a82f8df91573",
+      "bytes": 227218,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/sector_map.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "0dc7f48bf455ff3e7df4f4f381bb79941fe5737f94164f25d8e361e2dd9983ed",
+      "bytes": 395,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

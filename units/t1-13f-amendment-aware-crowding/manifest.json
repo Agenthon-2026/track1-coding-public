@@ -1,0 +1,86 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-13f-amendment-aware-crowding",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/COVERPAGE.tsv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "3a29ef7438320e3961d3f083b66df7a986a6125c616b8be20e0e020732c9e3a9",
+      "bytes": 3427,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/INFOTABLE.tsv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "07fb0276fbd4b4487982e64194888f2c65edff19bfcdba992d6ebb83334d479b",
+      "bytes": 261525,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/SUBMISSION.tsv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "5fe1607cabbad452c9465ff8fbf3d32af64ded0c95187361dacfaf73d261855d",
+      "bytes": 1148,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/SUMMARYPAGE.tsv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "6393bc8fd99fe5eb0cd2fdb73e1f28522cdd7735f076949ef5104b08eefb8441",
+      "bytes": 745,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/target_managers.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "c65222b0d47482eacdc2ce66741804e6e147b61ec20571f2ada8422aaac35db3",
+      "bytes": 140,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/target_periods.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "7e43c6a0f5c7b6da4a6f754fdd8384a44a1d5eac4df2e2d7057ecdd07dfb536d",
+      "bytes": 50,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

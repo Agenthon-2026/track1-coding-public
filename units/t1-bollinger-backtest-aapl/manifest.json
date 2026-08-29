@@ -1,0 +1,21 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-bollinger-backtest-aapl",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/aapl_prices.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "3df74e10ea076b13c2c5e8ad2d63acd16a2e53b0f0be91b82faf2ea30a951c59",
+      "bytes": 132348,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

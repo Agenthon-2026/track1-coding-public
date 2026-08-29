@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qfbench2-track-coding"
+version = "2.0.0"
+description = "QFBench 2.0 Track-1 verifier/scorer wrapper: exposes qfbench2_track_coding.scoring.build_verifier(ctx) as required by the shared smoke runner (common/README.md contract). All scoring math lives in qfbench2-common."
+requires-python = ">=3.13"
+# The scoring path SHELLS OUT. `qfbench2_track_coding.scoring._run_trusted_checks` runs each
+# unit's grader-owned `checks/test_outputs.py` with `{sys.executable} -m pytest`, so the scoring
+# environment must be able to import what those checks import. Until 2026-08-29 this list was
+# `qfbench2-common` alone, and `qfbench2-common` carries pytest only in its `dev` extra.
+# Measured in a clean venv holding exactly the old list, on a real unit with a genuinely correct
+# submission: `python -m pytest` exited 1 ("No module named pytest") -- the same exit code as
+# "tests failed" -- so the attempt was scored 0 and labelled `t1.wrong_numeric`. Every Track 1
+# submission would have failed that way, and every one would have been blamed for it.
+#
+# Measured over all 87 public units (`pytest --collect-only`, 2026-08-29): 87 need pytest,
+# 44 need pandas, 1 needs scikit-learn. numpy and scipy arrive transitively from
+# qfbench2-common (numpy>=1.26, scipy>=1.11) and are not repeated here. Floors match
+# `docker/requirements-sandbox.txt`, which is what the checks were authored against.
+dependencies = [
+  "qfbench2-common>=2.3.0,<3",
+  "pytest>=8.2",
+  "pandas>=2.1",
+  "scikit-learn>=1.4",
+]
+
+[tool.setuptools]
+packages = ["qfbench2_track_coding"]

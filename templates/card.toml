@@ -1,0 +1,66 @@
+# =============================================================================
+# Track 1 (Coding Agents) — task-card v2
+# Specialised from QFBench2/common/templates/card.toml.template.
+# Replace ALL <...> placeholders. Validate with:
+#   qfbench2 card validate <unit-dir>
+# See AUTHORING-GUIDE.md for field guidance.
+# =============================================================================
+
+schema_version = "2.0"
+
+[task]
+id    = "t1-<category-prefix>-<short-slug>"   # e.g. "t1-deriv-bs-greeks-pde"
+track = "coding"
+title = "<One-line human-readable title>"
+split = "public-dev"   # community contributions: always "public-dev"
+
+[metadata]
+author_name              = "<Full Name>"
+author_email             = "<email>"
+difficulty               = "medium"   # easy | medium | hard
+# category MUST be one of the 10 ids from TASK-CATEGORIES.md:
+#   derivatives-pricing | fixed-income | credit | factor-research |
+#   backtesting | risk-management | microstructure | fx | nlp-on-finance | cross-domain
+category                 = "<category-id>"
+tags                     = ["python", "<domain>", "<method>"]
+expert_time_estimate_min = 20.0
+junior_time_estimate_min = 60.0
+
+[provenance]
+license             = "<SPDX-id>"        # e.g. "CC-BY-4.0" or "MIT" for synthetic data
+data_source         = "<url or 'synthetic'>"
+data_cutoff         = "<YYYY-MM-DD>"     # latest date in any input file; "" if fully synthetic
+public_release_date = "<YYYY-MM-DD>"     # when embargo lifts; match competition timeline
+redistributable     = true               # false => file committed as hash only
+manifest            = "manifest.json"
+
+[contamination]
+# Generate a fresh UUID4 for EVERY new unit: python -c "import uuid; print(uuid.uuid4())"
+# NEVER reuse a GUID from another unit. CI enforces global uniqueness.
+canary_guid = "<UNIQUE-UUIDv4-PER-UNIT>"
+
+[scoring]
+verifier            = "t1.pytest_invariants"
+metric              = "pass@k"
+admissibility_gates = ["g0_integrity", "g1_schema", "g2_cutoff_resource", "g3_domain_semantics"]
+
+[scoring.params]
+# Organizers run pass@1 (primary leaderboard) and pass@3 (secondary).
+k_values = [1, 3]
+
+[verifier]
+# How long the verifier (pytest + invariant checks) may run after the agent exits.
+timeout_sec = 300.0
+
+[agent]
+# How long the agent Docker container may run (wall-clock).
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 600.0
+cpus              = 16
+memory            = "128G"
+gpu               = true
+# "restricted": no open internet — egress only to allowlisted model APIs / the organizer
+# model endpoint via the audited proxy. Data fetching is still impossible (g2 cutoffs hold).
+network           = "restricted"

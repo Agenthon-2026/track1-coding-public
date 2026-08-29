@@ -1,0 +1,34 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-corporate-action-adjustment",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/corporate_actions.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "63d8d69948a2c25baed8f8248d0b36f15a04b58282dc20bac81a195217c3f2e2",
+      "bytes": 596,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/prices.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "066e812dd9adaeb0513384f7548093a42822cadff578763bf6a42a49aa77b3f8",
+      "bytes": 6540,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

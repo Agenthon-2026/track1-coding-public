@@ -1,0 +1,86 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-yield-curve-bond-immunization",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/curve_snapshot_t0.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "f348d1fd96a66c8aa868ba44f69639d98acb6fb6a0524d2ad0b533dbf9dd711a",
+      "bytes": 374,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/curve_snapshot_t1.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "64ff6c553fccda58ba9def3f4ea2a595e2b94ddfa01f5cede97d67d7966db9a7",
+      "bytes": 374,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/fetch_data.py",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "f47c75fb7356fecb2fb53ed6682bf1d49c5bb84cc1ab130508145131aad76996",
+      "bytes": 2716,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/hedge_instruments.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "2b7d8bcb7b3f2cfffe77d504dfd7babf6f2c768767681e36c2f7dfed5f5a8ddc",
+      "bytes": 1949,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/liability_schedule.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "197f74be4a659109931793c1422efc26f97f0239ef0b8bc7b92ca9af8bc3d0ad",
+      "bytes": 1460,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/treasury_par_yields.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "bce8acb493adb9e905c96df9d8cc289a38f9c084793b7bd7ec38c1b19fc6466d",
+      "bytes": 135264,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

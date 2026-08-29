@@ -1,0 +1,34 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-cme-hdd-option-pricing",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/contract_terms.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "d316dd6ed29e33c59c56e8f90591596546157963c05d4dfc84cb568a5a0e88c0",
+      "bytes": 341,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/weather_observations.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "b3217c48582e97e924620db893fed8f23d992a4b4bb8ec92e3cb7b3a4217cde4",
+      "bytes": 5704560,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

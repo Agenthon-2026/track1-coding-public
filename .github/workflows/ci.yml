@@ -1,0 +1,139 @@
+name: Track 1 CI
+
+# Each track repo's root IS the public folder, so all paths below are root-relative.
+on:
+  push:
+    branches: [main, "task/**", "track1/**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------------------
+  # The firewall runs FIRST and ALONE, with no dependency install.
+  #
+  # Why its own job: every other job installs qfbench2-common over the network before it can
+  # do anything. Steps after a failed install are SKIPPED -- so a firewall check placed after
+  # that install silently does not run in exactly the case that matters most, an install that
+  # breaks. Stdlib-only and dependency-free, this job runs everywhere, always.
+  # ---------------------------------------------------------------------------------------
+  firewall:
+    name: Firewall — no held-out material (stdlib-only, no secrets)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: No held-out material (hash roster, three arms)
+        run: python .github/check_heldout_roster.py
+      # Pin where deliverables go. This repo needs the harness to bind the run output directory
+      # at BOTH /app/output and /output; the test enumerates, from the unit data, which units
+      # require each. Stdlib-only and unit-data-only, so it needs no toolkit install.
+      - name: Output-dir contract tests
+        run: python tests/test_output_dir_contract.py
+      # The card's [environment] block is what the harness enforces; the prose is a copy, and
+      # a copy drifts. Five published files told teams "4 vCPUs, 8 GB RAM, no GPU" while all
+      # 87 cards declared 16 / 128G / gpu = true. Stdlib-only, so it runs without the toolkit.
+      - name: Resource-contract docs match the cards
+        run: python tests/test_resource_contract_docs.py
+
+  lint-type:
+    name: Lint + type check (ruff + mypy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install tools + shared toolkit
+        run: |
+          python -m pip install --upgrade pip
+          pip install "ruff==0.4.7" "mypy==1.10.0"
+          pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.3.1#subdirectory=common"
+      - name: Ruff lint
+        run: ruff check qfbench2_track_coding
+      - name: Ruff format check
+        run: ruff format --check qfbench2_track_coding
+      - name: Mypy (strict)
+        run: mypy --strict --ignore-missing-imports qfbench2_track_coding
+
+  # tests/test_scoring_bypass.py is the standing proof that admission comes from running the
+  # unit's own checks and never from the submission's `reward.json`. Until 2026-08-29 no job ran
+  # it: the firewall job runs the three stdlib-only test files as scripts, and this one is
+  # pytest-only, so the repository's most load-bearing test was executed by nobody. It also now
+  # pins the fault attribution — a scoring environment that cannot run the checks raises
+  # OrganizerFault instead of handing the submission a zero labelled `t1.wrong_numeric`.
+  scorer-tests:
+    name: Scorer tests (the submission cannot score itself)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install shared toolkit + test runner
+        run: |
+          python -m pip install --upgrade pip
+          pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.3.1#subdirectory=common"
+          pip install "pytest>=8.2"
+      # --no-deps for the same reason every other job uses it: the toolkit is installed from the
+      # tag above, not resolved from an index.
+      - name: Install the track scoring package
+        run: pip install -e . --no-deps
+      - name: Scorer tests
+        run: python -m pytest tests/test_scoring_bypass.py -q
+
+  validate-units:
+    name: Validate units (cards · canaries · manifests · public-safety)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install shared toolkit
+        run: |
+          python -m pip install --upgrade pip
+          pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.3.1#subdirectory=common"
+      # The CodaBench bundle and the shared smoke runner both resolve the scorer as
+      # import_module("qfbench2_track_coding.scoring") — guard that contract here so a
+      # rename or packaging change can never silently break official scoring again.
+      - name: Track scoring package import contract
+        run: |
+          pip install -e . --no-deps
+          python -c "from qfbench2_track_coding.scoring import build_verifier, LEADERBOARD_SORT; print('contract OK:', LEADERBOARD_SORT)"
+      - name: Validate all public units
+        run: python .github/validate_units.py coding
+      # The hub's _ORACLE_GLOBS miss an oracle implementation named reference/solve.py and
+      # friends; validate_units.check_oracle_filenames closes that. This pins the closure.
+      - name: Oracle-filename firewall tests
+        run: python tests/test_oracle_filename_firewall.py
+
+  # A dataset build that strips nothing is the failure this gate exists to prevent: a T1 public
+  # unit keeps its answers in checks/, not reference/, so a split that trusts the hub declaration
+  # alone reports "0 stripped" and mounts the answers. Build it here so that regression is loud
+  # in CI rather than discovered on the leaderboard.
+  dataset-split:
+    name: Dev-dataset split (answers must not reach the mounted tree)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      # Keep this a TAG, never @main: a floating ref would let the gate's meaning change
+      # without a diff.
+      - name: Install shared toolkit (carries the dataset split)
+        run: |
+          python -m pip install --upgrade pip
+          pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.3.1#subdirectory=common"
+      - name: Build both trees and gate on names + content
+        run: python scripts/build_dev_dataset.py --out "${RUNNER_TEMP}/t1-dataset"

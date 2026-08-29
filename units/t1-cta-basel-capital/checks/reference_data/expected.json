@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "seed": 42,
+    "tier": 3,
+    "domains": [
+      "PM",
+      "VOL",
+      "RISK",
+      "BK"
+    ],
+    "task_id": "cta-basel-capital"
+  },
+  "deliverables": [
+    {
+      "name": "capital_charge",
+      "value": 0.3232362402797153,
+      "path": "results.json:capital_charge",
+      "tolerance": {
+        "rtol": 0.05,
+        "atol": 0.01
+      }
+    },
+    {
+      "name": "stressed_var",
+      "value": 0.0733085731049146,
+      "path": "results.json:stressed_var",
+      "tolerance": {
+        "rtol": 0.05,
+        "atol": 0.005
+      }
+    },
+    {
+      "name": "var_component",
+      "value": 0.07398709172300569,
+      "path": "results.json:var_component",
+      "tolerance": {
+        "rtol": 0.05,
+        "atol": 0.01
+      }
+    },
+    {
+      "name": "svar_component",
+      "value": 0.24924914855670965,
+      "path": "results.json:svar_component",
+      "tolerance": {
+        "rtol": 0.05,
+        "atol": 0.01
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-<category-prefix>-<short-slug>",
+  "generated_by": "qfbench2 manifest build <unit-dir>",
+  "files": [
+    {
+      "path": "environment/data/<input-file>.parquet",
+      "role": "input",
+      "source": "<url or 'synthetic'>",
+      "license": "<SPDX-id>",
+      "sha256": "<64-hex — regenerate with: qfbench2 manifest build .>",
+      "bytes": 0,
+      "split": "public-dev",
+      "cutoff": "<YYYY-MM-DD or empty string for synthetic>",
+      "public_release_date": "<YYYY-MM-DD>",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "_notes": [
+    "Every file the agent reads OR the verifier reads MUST have an entry here.",
+    "Non-redistributable files set redistributable=false and are NOT committed;",
+    "only their sha256 + access instructions are recorded.",
+    "Regenerate after ANY change to an input file: qfbench2 manifest build <unit-dir>",
+    "CI verifies checksums via qfbench2_common.manifest.verify_manifest(unit_dir)."
+  ]
+}

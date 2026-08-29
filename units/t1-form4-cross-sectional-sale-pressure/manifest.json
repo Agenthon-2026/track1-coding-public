@@ -1,0 +1,73 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-form4-cross-sectional-sale-pressure",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/form4_iot.xml",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "fd35916ecc2f769d3b3a3391852540498ec8c2d023603b14882d105362b84500",
+      "bytes": 18808,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/form4_roku.xml",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "b2951157c90dc36ea216adad6a3cc6e56e8fef92a515195db2a4193b1a62f8d6",
+      "bytes": 29277,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/form4_snow.xml",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "e91b5042e814c8aa081b862d4d3519e41d258dd08fbe00cfe99767e68ab989d4",
+      "bytes": 40162,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/form4_tsla.xml",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "a9140a5a248dc03998f9f3c174fc107460770b041b315660fd7d043c5beb3357",
+      "bytes": 50297,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/market_context.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "bdfd787843237b0daddb780763a0a08201dd353701c03ea77b733ec03722ee9c",
+      "bytes": 431,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}

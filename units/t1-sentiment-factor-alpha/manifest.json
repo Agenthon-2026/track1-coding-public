@@ -1,0 +1,86 @@
+{
+  "manifest_version": "2.0",
+  "unit_id": "t1-sentiment-factor-alpha",
+  "generated_by": "scripts/migrate_track1.py",
+  "files": [
+    {
+      "path": "environment/data/glossary.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "ebc0c49aea8d24b7dc3bf788cfb8acf0d1fd5cfd9c2ef4c4c6160f2f934b174b",
+      "bytes": 918531,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/market_factor.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "cdceac2e67a9e4e2f76da14e575e56cc401d4ec55fcde9dbb96589cbc551f9b1",
+      "bytes": 16505,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/params.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "528eee9c1808671bc5d9d9e6b99174ac0e66f97fa3da81d494133f137bcc5598",
+      "bytes": 281,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/posts.jsonl",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "94cd3c1535cb6d5be7060e71d89fbf4678acaf2d0266fb6622ec5a312f6a22ba",
+      "bytes": 9015663,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/prices.csv",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "206e5c1fa5b2f625a5efd7f013626582b958e17a74df2c2367211e4f48417642",
+      "bytes": 140140,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "environment/data/sentiment_words.json",
+      "role": "input",
+      "source": "QFBench v1 (public)",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "489bb080e7775cfda442de7ef8474066d06eb07ac45403d74ea5f7530585880e",
+      "bytes": 600,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    }
+  ],
+  "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."
+}
