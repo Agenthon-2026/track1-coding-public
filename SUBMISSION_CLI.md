@@ -49,8 +49,12 @@ internet** in official scoring.
 > Your two supported options are therefore:
 >
 > 1. **House endpoint** — call `MODEL_ENDPOINT` with `MODEL_NAME`. Free, metered per run.
-> 2. **Bring your own weights** — vendor them in the image (`byo-large` / `byo-small`) and run
->    them locally. Nothing is fetched at run time.
+> 2. **Bring your own adapter (BYO)** — ship a **LoRA adapter, rank ≤ 64**, and nothing else.
+>    You do not bundle model weights and you do not run a model server. The organizer starts a
+>    dedicated server for your submission on the same base model served at `$MODEL_ENDPOINT`,
+>    with your adapter loaded at launch, and destroys it when your submission finishes. At run
+>    time your code sees the same contract as an `api` submission: call `$MODEL_ENDPOINT` with
+>    `$MODEL_NAME`, which for a BYO run names *your adapter*. Nothing is fetched at run time.
 >
 > **No participant API keys exist.** The harness injects none and there is no mechanism for a
 > submission to supply one, so a vendor key would have nothing to reach even if you had one.
@@ -66,8 +70,18 @@ stays `none`. For the agent tracks, every submission declares one category in `s
 | Category | What you bundle | Model access | Compute tier |
 |---|---|---|---|
 | `api` | prompts / harness / system-prompts / agents (your contribution is the scaffolding) | the **house endpoint only**, via the proxy | CPU |
-| `byo-large` | your own **large** model weights in-image | local weights; may **also** call the house endpoint | GPU, 80GB-class |
-| `byo-small` | your own **small** model weights (≤ ~8B) in-image | local weights; may **also** call the house endpoint | CPU or small GPU |
+| `byo-large` | a **LoRA adapter** (`adapter_model.safetensors` + `adapter_config.json`), rank ≤ 64 — no model weights, no model server | the house endpoint only, serving the organizer's base **with your adapter loaded**; `$MODEL_NAME` names your adapter | CPU + API calls (the worker's GPU serves the base model) |
+
+**There is no small-weights tier.** `byo-small` and `byo-large` are **legacy names** the
+descriptor enum still accepts (`CATEGORIES = ("api", "byo-large", "byo-small", "simulator")` in
+`qfbench2_common.contracts.descriptor`); they no longer describe two different tiers. BYO means
+bring your own **adapter**. Additional build rules: exactly one adapter per submission; declare
+`target_modules` accurately in `adapter_config.json`, as it is read; full fine-tuning is not
+permitted; extraction is static, so none of your code runs during it, and an adapter that fails
+to load fails the submission at that point — an over-cap adapter is refused with
+`LoRA rank 128 is greater than max_lora_rank 64`. To test locally,
+`vllm serve <base> --enable-lora --max-lora-rank 64 --lora-modules mine=<adapter-dir>`; vLLM's
+default `--max-lora-rank` is 16, so omitting the flag imposes a tighter cap than the competition's.
 
 ### Container environment contract (`restricted` mode, set by the harness)
 
@@ -83,17 +97,18 @@ stays `none`. For the agent tracks, every submission declares one category in `s
 
 1. **Vendor-side tools OFF.** Web search, code execution, retrieval, and any other vendor-side
    tool MUST be disabled in every API call. Enforced by rule + audit of the proxy logs.
-2. **Pin model versions.** The house endpoint serves a pinned model id (`MODEL_NAME`); for
-   bundled weights, pin the exact revision. Floating aliases (`*-latest`) are not reproducible
-   and are rejected at verification.
-3. **Disclose training cutoffs.** The training cutoff of every model used (API or bundled) MUST
-   be declared in submission metadata (`models[].training_cutoff` in `submission.json`).
+2. **Pin model versions.** The house endpoint serves a pinned model id (`MODEL_NAME`). Floating
+   aliases (`*-latest`) are not reproducible and are rejected at verification.
+3. **Disclose training cutoffs.** The training cutoff of every model used MUST be declared in
+   submission metadata (`models[].training_cutoff` in `submission.json`). For a BYO entry that
+   is the organizer's base model, which your adapter is trained on top of.
 4. **Pin temperature/seed** where the API supports it. `api`-category entries are verified
    *statistically* (bootstrap-CI overlap on organizer rerun); BYO entries bit-reproducibly.
 5. **Budget (PROVISIONAL — finalized before dev-phase open).** A uniform per-unit budget applies
    to every submission — provisional figure: **1,000,000 input + 100,000 output tokens per unit**
-   — enforced via proxy logs and spot audit. It applies to house-endpoint calls; locally-run
-   bundled weights are bounded by the card's wall clock and resource caps instead.
+   — enforced via proxy logs and spot audit. It applies to house-endpoint calls, which is every
+   model call an agent can make: a BYO entry reaches its adapter through the same endpoint, so
+   the same budget applies to it.
 
 **One leaderboard.** All categories rank on a single board; every entry is tagged with its
 category, the models used (pinned versions), and their training cutoffs.

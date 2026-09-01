@@ -70,7 +70,8 @@ Written automatically by `checks/test.sh` — **do not write this file**.
 ## Constraints
 
 - **Restricted network.** No open internet — calls to the organizer-hosted model endpoint (`$MODEL_ENDPOINT`) only, through the organizer's audited proxy. Vendor model APIs are refused by the proxy and no API keys are injected. No data fetching: all data you need is under `/input`.
-- **Runtime.** Complete within 1800 seconds.
+- **Runtime.** Complete within 1800 seconds — this unit's `[agent].timeout_sec`. Other units
+  declare other values; always read the card of the unit you are solving.
 - **Resources.** 16 vCPUs, 128 GB RAM, GPU available.
 - **Language.** Python 3.13.  Available packages: `numpy`, `pandas`, `scipy`,
   `pyarrow`, `numba`.  See `environment/Dockerfile` for the full list.

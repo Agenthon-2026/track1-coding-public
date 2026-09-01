@@ -185,7 +185,12 @@ k_values = [1, 3]
 timeout_sec = 300.0    # time allowed for the checker to run
 
 [agent]
-timeout_sec = 1800.0   # 30 minutes for the agent to solve the task
+timeout_sec = 1800.0   # wall-clock budget for the agent. This is the starting default, NOT a
+                       # fixed competition-wide value: raise it for a unit that needs longer.
+                       # Across the 87 public units the declared values run 1200-5400 (63 at
+                       # 1800, 18 at 2400, 4 at 3600, one at 1200, one at 5400). Whatever you
+                       # put here is what the harness enforces for your unit, and it is the
+                       # number your instruction.md must quote.
 
 [environment]
 build_timeout_sec = 600.0
@@ -250,7 +255,8 @@ what kind of calculation is needed.>
 - Restricted network. No open internet — model-API calls only, through the organizer's
   audited proxy to $MODEL_ENDPOINT only. No data fetching: all data
   you need is under /input.
-- Runtime: complete within 1800 seconds.
+- Runtime: complete within <N> seconds. (Quote your card's own `[agent].timeout_sec` here —
+  it varies by unit; do not paste another unit's number.)
 - Resources: 16 vCPUs, 128 GB RAM, GPU available (see `[environment]` in the card).
 - Language: Python 3.13. Available packages: numpy, pandas, scipy, pyarrow. (List what is in
   the Dockerfile.)

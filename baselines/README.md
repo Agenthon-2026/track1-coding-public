@@ -21,11 +21,12 @@ submission can reach a model:
 Vendor APIs — `api.anthropic.com`, `api.openai.com`,
 `generativelanguage.googleapis.com`, any other — are **refused by the proxy**
 (policy 2026-08-04), and no participant API keys exist: the harness injects none
-and there is no mechanism to supply one. Bundling your own weights in the image
-is the alternative (`byo-large` / `byo-small`).
+and there is no mechanism to supply one. The alternative is a BYO entry, which
+ships a **LoRA adapter of rank ≤ 64** — not model weights — that the organizer
+loads onto the base model behind `$MODEL_ENDPOINT`. See `SUBMISSION_CLI.md`.
 
 There is no open internet either way; every connection is logged. FinanceZero
-is a **category `api`** entry: it bundles no model weights — the whole
+is a **category `api`** entry: it ships no adapter — the whole
 contribution is the prompt and the packaging. Its model version is pinned (a
 dated snapshot), its training cutoff is disclosed in the submission metadata,
 and vendor-side tools (web search, code execution, retrieval) are disabled in
@@ -165,4 +166,5 @@ Any of the following improvements are expected to push well above the baseline:
 - Code execution + invariant checking in the agent loop.
 - Fine-tuned or few-shot model with QFBench-style examples.
 
-See the competition leaderboard at <https://qfbench.org/competition/2026>.
+The leaderboard is the track's CodaBench competition page; see the repository `README.md` for
+where the submission instructions and the competition page link are published.

@@ -53,7 +53,9 @@ k_values = [1, 3]
 timeout_sec = 300.0
 
 [agent]
-# How long the agent Docker container may run (wall-clock).
+# How long the agent Docker container may run (wall-clock). Per-unit, not competition-wide:
+# 1800.0 is the common starting value, and published units range from 1200.0 to 5400.0.
+# Set what your unit actually needs and quote that same number in its instruction.md.
 timeout_sec = 1800.0
 
 [environment]

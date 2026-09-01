@@ -76,7 +76,8 @@ Written automatically by `checks/test.sh` — **do not write this file yourself*
 ## Constraints
 
 - **Restricted network.** No open internet — calls to the organizer-hosted model endpoint (`$MODEL_ENDPOINT`) only, through the organizer's audited proxy. Vendor model APIs are refused by the proxy and no API keys are injected. No data fetching: all data you need is under `/input`.
-- **Runtime.** Your solution must complete within 1800 seconds of wall-clock time.
+- **Runtime.** Your solution must complete within `<N>` seconds of wall-clock time. (Replace
+  `<N>` with this unit's `[agent].timeout_sec` from `card.toml` — the value varies by unit.)
 - **Resources.** 16 vCPUs, 128 GB RAM. GPU available.
 - **Language.** Python 3.13 is available. See `environment/Dockerfile` for the
   exact package list.

@@ -155,7 +155,10 @@ For a **local smoke run** without the eval network, `docker run --network=none .
 same mounts still works and is what the local harness falls back to (with a warning) when the
 `qfb2-eval` network does not exist — your agent just gets no model access in that mode.
 
-The agent must write its output files to `/app/output` within the time limit (1800 seconds).
+The agent must write its output files to `/app/output` within that unit's time limit. The limit
+is `[agent].timeout_sec` in the unit's own `card.toml` and **the card is authoritative** — it is
+not the same for every unit. Across the 87 public units it ranges from 1200 to 5400 seconds;
+1800 is the most common value, not a universal one.
 The checker (`checks/test.sh`) runs **offline** and writes the reward signal itself — do not
 write the reward files yourself.
 
@@ -170,8 +173,10 @@ This runs your Docker image against the exemplar's checks and reports pass/fail.
 ### 7. Submit to the leaderboard
 
 Push your Docker image to a container registry (e.g. Docker Hub, AWS ECR) and register the
-image URL on the Codabench leaderboard at `https://qfbench.org/competition/2026`. Full
-submission instructions are at the competition website.
+image URL on the track's CodaBench competition page. The submission interface and the full
+submission instructions are published there; the competition page link is announced on the
+competition website and in the participant announcements, and `SUBMISSION_CLI.md` in this repo
+documents the image contract the page expects.
 
 ---
 
@@ -255,21 +260,41 @@ qfbench2 smoke units/t1-EXAMPLE-bs-greeks-pde /tmp/smoke-out --track coding
    execution, retrieval) must be disabled. Fetching data, packages, or web pages is impossible.
    Every connection is logged and audited. Model versions must be pinned (dated snapshots) and
    each model's training cutoff disclosed in the submission metadata; temperature/seed pinned
-   where the API supports it. Three submission categories — `api` (API models only; your
-   contribution is prompts/harness), `byo-large` (own large weights in-image, 80GB-class GPU
-   tier), `byo-small` (own small weights, ≤~8B) — share one leaderboard; every entry is tagged
-   with its category, pinned models, and training cutoffs. A uniform per-unit model-API budget
+   where the API supports it. Two ways to submit — `api` (house endpoint only; your contribution
+   is the prompts/harness) and BYO (you ship a **LoRA adapter of rank ≤ 64**, never model
+   weights and never a model server, and the organizer serves the base model with your adapter
+   loaded) — share one leaderboard; every entry is tagged
+   with its category, pinned models, and training cutoffs. In `submission.json` a BYO entry
+   declares `byo-large`: there is no small-weights tier, and `byo-small`/`byo-large` survive only
+   as legacy names in the descriptor enum. See [`SUBMISSION_CLI.md`](SUBMISSION_CLI.md) for the
+   adapter contract. A uniform per-unit model-API budget
    applies (**provisional: 1,000,000 input + 100,000 output tokens per unit — finalized before
    the dev phase opens**).
 2. **Docker image.** CLI verb: `solve --task-dir /input --out /app/output`.
-3. **Time limit.** 1800 seconds (30 minutes) per task.
+3. **Time limit.** Per task, declared by `[agent].timeout_sec` in that unit's card; the card is
+   authoritative. The value varies by unit — across the 87 public units it ranges from 1200 to
+   5400 seconds (20 to 90 minutes): 63 units at 1800, 18 at 2400, 4 at 3600, one at 1200 and one
+   at 5400. `[verifier].timeout_sec` (the checker's budget, after your agent exits) and
+   `[environment].build_timeout_sec` (the image build) are separate fields with their own values;
+   do not read either as the agent's limit.
 4. **Resources.** 16 vCPUs, 128 GB RAM, GPU available. Every unit card declares this in
    `[environment]` (`cpus = 16`, `memory = "128G"`, `gpu = true`); the card is authoritative.
 5. **Metric.** Mean pass@1 (primary), mean pass@3 (secondary), 95% bootstrap CIs.
 6. **Baseline.** Beat FinanceZero on pass@1 over the `private-test` split.
 7. **Data cutoff.** Each task card declares a `data_cutoff`; agents must not use data beyond it.
 
-Full rules: `https://qfbench.org/competition/2026/rules`
+**Where the full rules live.** There is no separate rules website. The rules that bind a Track 1
+submission are the seven points above, plus:
+
+- [`SUBMISSION_CLI.md`](SUBMISSION_CLI.md) — the image contract, the network and model-access
+  rules, submission categories, and the reproducibility requirements.
+- [`docs/CONCEPTS.md`](docs/CONCEPTS.md) — the sandbox, the admissibility gates, and the metric.
+- each unit's `card.toml` — the per-unit limits, which are authoritative wherever prose and card
+  disagree.
+
+The track's CodaBench competition page carries the submission mechanics and any dated
+amendments. If a statement here and one there conflict, the CodaBench page and the card win, and
+the difference is a bug worth reporting on the issue tracker.
 
 ---
 
