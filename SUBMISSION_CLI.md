@@ -102,8 +102,10 @@ default `--max-lora-rank` is 16, so omitting the flag imposes a tighter cap than
 3. **Disclose training cutoffs.** The training cutoff of every model used MUST be declared in
    submission metadata (`models[].training_cutoff` in `submission.json`). For a BYO entry that
    is the organizer's base model, which your adapter is trained on top of.
-4. **Pin temperature/seed** where the API supports it. `api`-category entries are verified
-   *statistically* (bootstrap-CI overlap on organizer rerun); BYO entries bit-reproducibly.
+4. **Pin temperature/seed** where the API supports it. Entries are verified
+   *statistically* (bootstrap-CI overlap on organizer rerun). That applies to BYO entries too: a
+   BYO submission reaches its adapter through the same endpoint as an `api` one, so it is not
+   bit-reproducible either.
 5. **Budget (PROVISIONAL — finalized before dev-phase open).** A uniform per-unit budget applies
    to every submission — provisional figure: **1,000,000 input + 100,000 output tokens per unit**
    — enforced via proxy logs and spot audit. It applies to house-endpoint calls, which is every

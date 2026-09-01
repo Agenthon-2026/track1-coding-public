@@ -265,8 +265,8 @@ qfbench2 smoke units/t1-EXAMPLE-bs-greeks-pde /tmp/smoke-out --track coding
    weights and never a model server, and the organizer serves the base model with your adapter
    loaded) — share one leaderboard; every entry is tagged
    with its category, pinned models, and training cutoffs. In `submission.json` a BYO entry
-   declares `byo-large`: there is no small-weights tier, and `byo-small`/`byo-large` survive only
-   as legacy names in the descriptor enum. See [`SUBMISSION_CLI.md`](SUBMISSION_CLI.md) for the
+   declares `byo-large` or `byo-small` — they are legacy names for the same thing, both still
+   accepted by the descriptor enum. There is no small-weights tier. See [`SUBMISSION_CLI.md`](SUBMISSION_CLI.md) for the
    adapter contract. A uniform per-unit model-API budget
    applies (**provisional: 1,000,000 input + 100,000 output tokens per unit — finalized before
    the dev phase opens**).
