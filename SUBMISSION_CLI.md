@@ -185,7 +185,10 @@ everything else to `simulate`. Six of the public dev units (`t3-gbatch-*`) are b
    Harbor's `/logs/verifier/reward.txt` (1/0) **and** `<output>/reward.json` + `pytest_report.json`
    for the Agenthon g0–g3 verifier and DI failure-label overlay. The same unit therefore runs under
    **both** Harbor (`harbor run --path units ...`) and the Agenthon harness
-   (`qfbench2 smoke <unit> <out> --track coding`). See
+   (`qfbench2 smoke <unit> <out> --track coding`). **On the evaluation platform `checks/` is
+   sealed** — it is not mounted into your container — so the verifier runs the checks itself
+   against your deliverables. `reward.json` is therefore *optional* in your output and never
+   decides admission; what you must write is the unit's deliverables (point 9). See
    `tracks/track1-coding/public/docs/QFBENCH-HERITAGE.md`. (T2/T3/T4 keep the generic `/output`
    contract above.)
 9. **T1 output contract is PER-UNIT, and generalising from one unit will cost you a submission.**

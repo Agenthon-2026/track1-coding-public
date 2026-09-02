@@ -105,45 +105,69 @@ def _g0_integrity(ctx: dict[str, Any]) -> GateResult:
 
 # ---------------------------------------------------------------------------
 # Gate g1 — output schema
-# T1 output schema: /output/reward.json exists, reward ∈ {0.0, 1.0}.
+# T1 output schema: /output holds at least one deliverable; reward.json, if present, has reward ∈ {0.0, 1.0}.
 # (Full per-task schema validation delegates to the task-specific checker.)
 # ---------------------------------------------------------------------------
 
 
 def _g1_schema(ctx: dict[str, Any]) -> GateResult:
-    """Verify that /output/reward.json is present and well-formed.
+    """Verify that the submission produced deliverables, and that a `reward.json`, IF present, is
+    well-formed.
+
+    `reward.json` is NOT required here any more. Measured 2026-09-02: it is written by the
+    unit's `checks/test.sh`, and `checks/` is stripped from every mounted tree (it is Track 1's
+    sealed grader), so no participant container can produce it. Requiring it here made every
+    real Track 1 submission inadmissible at g1, before the grader ran -- indistinguishable from a
+    genuinely failing one. The grader's checks run in `_g3_domain_semantics`
+    (`_run_trusted_checks`), and admission comes from them alone; g1's job is the shape of what
+    the submission wrote, which is: at least one regular file in the output directory.
 
     ctx keys consumed:
         output_dir (str | pathlib.Path): path to /output.
     """
     output_dir = pathlib.Path(ctx.get("output_dir", "/output"))
+    if not output_dir.is_dir():
+        return GateResult(
+            passed=False,
+            label=FailureLabel.SCHEMA_INVALID_OUTPUT,
+            detail={"error": f"output directory not found at {output_dir}"},
+        )
+    deliverables = sorted(
+        p.name
+        for p in output_dir.iterdir()
+        if p.is_file() and p.name not in ("reward.json", "pytest_report.json")
+    )
+    if not deliverables:
+        return GateResult(
+            passed=False,
+            label=FailureLabel.SCHEMA_INVALID_OUTPUT,
+            detail={
+                "error": f"no deliverable in {output_dir}: the submission wrote nothing the "
+                "unit's checks could examine"
+            },
+        )
+
     reward_path = output_dir / "reward.json"
+    if reward_path.exists():
+        try:
+            payload = json.loads(reward_path.read_text())
+        except json.JSONDecodeError as exc:
+            return GateResult(
+                passed=False,
+                label=FailureLabel.SCHEMA_INVALID_OUTPUT,
+                detail={"error": f"reward.json is not valid JSON: {exc}"},
+            )
+        reward = payload.get("reward") if isinstance(payload, dict) else None
+        if reward not in (0, 1, 0.0, 1.0):
+            return GateResult(
+                passed=False,
+                label=FailureLabel.SCHEMA_INVALID_OUTPUT,
+                detail={
+                    "error": f"reward.json carries reward={reward!r}; expected 0.0 or 1.0"
+                },
+            )
 
-    if not reward_path.exists():
-        return GateResult(
-            passed=False,
-            label=FailureLabel.SCHEMA_INVALID_OUTPUT,
-            detail={"error": f"reward.json not found at {reward_path}"},
-        )
-
-    try:
-        payload = json.loads(reward_path.read_text())
-    except json.JSONDecodeError as exc:
-        return GateResult(
-            passed=False,
-            label=FailureLabel.SCHEMA_INVALID_OUTPUT,
-            detail={"error": f"reward.json is not valid JSON: {exc}"},
-        )
-
-    reward = payload.get("reward")
-    if reward not in (0.0, 1.0):
-        return GateResult(
-            passed=False,
-            label=FailureLabel.SCHEMA_INVALID_OUTPUT,
-            detail={"error": f"reward={reward!r}, expected 0.0 or 1.0"},
-        )
-
-    return GateResult(passed=True, detail={"reward_raw": reward})
+    return GateResult(passed=True, label=None, detail={"deliverables": deliverables})
 
 
 # ---------------------------------------------------------------------------
@@ -429,32 +453,31 @@ def _g3_domain_semantics(ctx: dict[str, Any]) -> GateResult:
     output_dir = pathlib.Path(ctx.get("output_dir", "/output"))
     di_label_only: bool = bool(ctx.get("di_label_only", False))
 
-    # --- Read reward from reward.json (written by test.sh) ---
+    # --- The submission's CLAIM, if it made one. `reward.json` is written by `checks/test.sh`
+    # under Harbor; under this harness `checks/` is stripped from the mounted tree, so a
+    # participant container normally cannot write it, and its absence means nothing. Present
+    # and unparseable is still refused: a malformed claim is a malformed output.
     reward_path = output_dir / "reward.json"
     report_path = output_dir / "pytest_report.json"
 
-    if not reward_path.exists():
-        return GateResult(
-            passed=False,
-            label=FailureLabel.T1_WRONG_NUMERIC,
-            detail={"error": "reward.json missing at g3 stage"},
-        )
-
-    try:
-        payload = json.loads(reward_path.read_text())
-        reward = float(payload.get("reward", 0.0))
-    except Exception as exc:
-        return GateResult(
-            passed=False,
-            label=FailureLabel.T1_WRONG_NUMERIC,
-            detail={"error": f"reward.json parse error: {exc}"},
-        )
+    reward: float | None = None
+    payload: dict[str, Any] = {}
+    if reward_path.exists():
+        try:
+            payload = json.loads(reward_path.read_text())
+            reward = float(payload.get("reward", 0.0))
+        except Exception as exc:
+            return GateResult(
+                passed=False,
+                label=FailureLabel.T1_WRONG_NUMERIC,
+                detail={"error": f"reward.json parse error: {exc}"},
+            )
 
     # --- DI label overlay (diagnostic pass, admissible attempts only) ---
     # Classifies root-cause even when reward=1.0 to capture partially-correct
     # admissible solutions (e.g., correct price but sign-flipped theta).
     di_label: FailureLabel | None = None
-    if reward < 1.0:
+    if reward is not None and reward < 1.0:
         di_label = _classify_pytest_failure(report_path)
     elif di_label_only:
         # For admissible attempts: run classification on any non-fatal warnings
@@ -472,8 +495,9 @@ def _g3_domain_semantics(ctx: dict[str, Any]) -> GateResult:
 
     # --- Binary admission decision: the GRADER's checks, never the submission's claim ---
     #
-    # `reward.json` is written by the submission's own container. It is part of the published
-    # output contract and g1 still requires it, but it cannot decide correctness: measured
+    # `reward.json` is written by the submission's own container when it can (Harbor); under
+    # this harness it usually cannot, and g1 no longer requires it. Either way it cannot decide
+    # correctness: measured
     # 2026-08-28, an output directory containing nothing but `{"reward": 1.0}` -- no solution,
     # no deliverable, nothing executed -- was admitted with score 1.0, identical to a genuinely
     # correct submission. Admission now comes from running the unit's own `checks/` against the
@@ -494,7 +518,7 @@ def _g3_domain_semantics(ctx: dict[str, Any]) -> GateResult:
             },
         )
 
-    if trusted_ok and reward < 1.0:
+    if trusted_ok and reward is not None and reward < 1.0:
         # The submission under-reported itself. Harmless, but worth recording.
         trusted["claim_disagreement"] = "checks passed, submission reported failure"
 
@@ -534,7 +558,7 @@ def build_verifier(ctx: dict[str, Any]) -> HierarchicalVerifier:
 
     Gate order (matches the published contract in qfbench2_common.verifier):
         g0_integrity         manifest checksums OK, schema_version == "2.0"
-        g1_schema            reward.json present and well-formed
+        g1_schema            the submission wrote deliverables; reward.json, if any, well-formed
         g2_cutoff_resource   timeout, canary, restricted-network compliance
         g3_domain_semantics  pytest passes AND financial invariants hold
 
