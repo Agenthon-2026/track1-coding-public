@@ -106,8 +106,8 @@ default `--max-lora-rank` is 16, so omitting the flag imposes a tighter cap than
    *statistically* (bootstrap-CI overlap on organizer rerun). That applies to BYO entries too: a
    BYO submission reaches its adapter through the same endpoint as an `api` one, so it is not
    bit-reproducible either.
-5. **Budget (PROVISIONAL — finalized before dev-phase open).** A uniform per-unit budget applies
-   to every submission — provisional figure: **1,000,000 input + 100,000 output tokens per unit**
+5. **Budget (FINAL, ruled 2026-08-28).** A uniform per-unit budget applies
+   to every submission — **1,000,000 input + 100,000 output tokens per unit**
    — enforced via proxy logs and spot audit. It applies to house-endpoint calls, which is every
    model call an agent can make: a BYO entry reaches its adapter through the same endpoint, so
    the same budget applies to it.
@@ -211,7 +211,9 @@ everything else to `simulate`. Six of the public dev units (`t3-gbatch-*`) are b
 
 ## Open Division tag
 
-Submissions whose every model call uses the house endpoint exclusively may set
-`house_endpoint_only: true` in `submission.json`. This drives an "Open Division" display
-filter of the single leaderboard (never a separate ranking) and is verified against the
-audited egress-proxy logs during the verification phase.
+Do **not** add `house_endpoint_only` -- or any key the descriptor schema does not list -- to
+`submission.json`: the schema refuses unknown keys, so a submission carrying it is rejected
+before it runs. Whether every model call used the house endpoint exclusively is read from
+the audited egress-proxy logs during the verification phase; it drives an "Open Division"
+display filter of the single leaderboard (never a separate ranking) and needs nothing
+from you.

@@ -268,8 +268,7 @@ qfbench2 smoke units/t1-EXAMPLE-bs-greeks-pde /tmp/smoke-out --track coding
    declares `byo-large` or `byo-small` — they are legacy names for the same thing, both still
    accepted by the descriptor enum. There is no small-weights tier. See [`SUBMISSION_CLI.md`](SUBMISSION_CLI.md) for the
    adapter contract. A uniform per-unit model-API budget
-   applies (**provisional: 1,000,000 input + 100,000 output tokens per unit — finalized before
-   the dev phase opens**).
+   applies (**final, ruled 2026-08-28: 1,000,000 input + 100,000 output tokens per unit**).
 2. **Docker image.** CLI verb: `solve --task-dir /input --out /app/output`.
 3. **Time limit.** Per task, declared by `[agent].timeout_sec` in that unit's card; the card is
    authoritative. The value varies by unit — across the 87 public units it ranges from 1200 to
