@@ -210,7 +210,7 @@ The harness runs four sequential admissibility gates on each attempt:
 | Gate | Checks |
 |---|---|
 | `g0_integrity` | Task manifest checksums are correct |
-| `g1_schema` | `<output>/reward.json` exists and is well-formed |
+| `g1_schema` | `<output>` holds at least one deliverable; `reward.json`, if present, is well-formed (it is optional: `checks/` is sealed, so a participant container normally cannot write it) |
 | `g2_cutoff_resource` | Agent finished within time limit; no canary GUID emitted |
 | `g3_domain_semantics` | Pytest test suite passed; financial invariants hold |
 

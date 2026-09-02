@@ -6,8 +6,10 @@ admitted on its contents: measured on a real unit, an output directory containin
 identical to a genuinely correct submission. `checks_dir`, the documented "harness re-runs pytest"
 path, appeared only in a docstring and was never read.
 
-`reward.json` is still part of the published output contract and g1 still requires it. It simply
-does not decide anything.
+`reward.json` is OPTIONAL since 2026-09-02: it is written by `checks/test.sh`, and `checks/` is
+stripped from every mounted tree, so a participant container normally cannot write it. Requiring
+it at g1 made every real Track 1 submission inadmissible before the grader ran. It never decided
+anything; now it is not needed either.
 """
 
 from __future__ import annotations
@@ -169,3 +171,42 @@ class TestOurOwnBrokenEnvironmentIsNotChargedToTheSubmission:
         """The negative control: none of the above fires on a healthy environment."""
         assert _verdict(unit, _out(tmp_path, deliverable="42", reward=1.0)).passed
         assert not _verdict(unit, _out(tmp_path, deliverable="wrong", reward=1.0)).passed
+
+
+class TestRewardJsonIsOptional:
+    """The file g1 demanded is produced by the grader g3 runs; no participant can write it.
+
+    Measured 2026-09-02 on the public scorer: `_g1_schema` returned SCHEMA_INVALID_OUTPUT for
+    every output directory without `reward.json`, and `checks/` -- where `test.sh` writes it --
+    is in the hub's STRIP_DIRS for coding. So a correct deliverable with no claim was refused at
+    g1 on every real unit, indistinguishably from a wrong one.
+    """
+
+    def test_a_correct_deliverable_with_no_claim_is_admitted(self, unit, tmp_path):
+        r = _verdict(unit, _out(tmp_path, deliverable="42", reward=None))
+        assert r.passed, r.detail
+        assert r.detail["trusted_checks"] == "ran"
+        assert r.detail.get("claimed_reward") is None
+
+    def test_a_wrong_deliverable_with_no_claim_is_still_refused(self, unit, tmp_path):
+        assert not _verdict(unit, _out(tmp_path, deliverable="wrong", reward=None)).passed
+
+    def test_g1_admits_deliverables_without_a_claim_and_refuses_an_empty_output(self, tmp_path):
+        out = _out(tmp_path, deliverable="42", reward=None)
+        g1 = scoring._g1_schema({"output_dir": str(out)})
+        assert g1.passed, g1.detail
+        assert g1.detail["deliverables"] == ["answer.txt"]
+        empty = tmp_path / "empty"
+        empty.mkdir()
+        assert not scoring._g1_schema({"output_dir": str(empty)}).passed
+        assert not scoring._g1_schema({"output_dir": str(tmp_path / "absent")}).passed
+
+    def test_g1_still_refuses_a_malformed_or_out_of_range_claim(self, tmp_path):
+        assert not scoring._g1_schema({"output_dir": str(_out(tmp_path, deliverable="42", reward="NOT-JSON"))}).passed
+        assert not scoring._g1_schema({"output_dir": str(_out(tmp_path, deliverable="42", reward=0.5))}).passed
+        assert scoring._g1_schema({"output_dir": str(_out(tmp_path, deliverable="42", reward=1.0))}).passed
+
+    def test_a_claim_alone_is_not_a_deliverable(self, tmp_path):
+        """`reward.json` and `pytest_report.json` are the grader's artifacts; an output that holds
+        nothing else wrote nothing the checks could examine."""
+        assert not scoring._g1_schema({"output_dir": str(_out(tmp_path, deliverable=None, reward=1.0))}).passed
