@@ -58,20 +58,23 @@ TRACK = "coding"
 # script defers to the hub and says so rather than stripping twice.
 T1_ANSWER_DIRS = ("reference", "checks")
 
-# Every top-level entry a T1 unit is known to carry, enumerated across BOTH repos (87 public
-# units, 29 sealed). Anything outside this vocabulary stops the build rather than being mounted,
+# Every top-level entry a T1 unit is known to carry, enumerated across BOTH repos. Anything
+# outside this vocabulary stops the build rather than being mounted,
 # because an unrecognised entry is exactly where an undeclared answer directory would appear: a
 # declaration only covers the layouts it has seen, and a unit family whose shape nobody enumerated
 # is how answer material reaches a mounted tree while the gate reports success. Widening this set
 # is a deliberate, reviewed act -- which is the point.
 KNOWN_TOP_LEVEL = frozenset(
     {
-        "card.toml",  # 87/87 public, 29/29 sealed
-        "instruction.md",  # 87/87 public, 28/29 sealed (the EXAMPLE scaffold has none)
-        "manifest.json",  # 87/87 public, 28/29 sealed
-        "environment",  # 87/87 public, 28/29 sealed
-        "checks",  # 87/87 public, 29/29 sealed -- ANSWER MATERIAL
-        "reference",  # 0/87 public,  29/29 sealed -- ANSWER MATERIAL
+        # The per-entry census that used to sit here stated how many units on each side of the
+        # split carry each name. What this vocabulary needs to say is WHICH entries exist and
+        # which are answer material; the counts were a roster size in disguise.
+        "card.toml",  # universal
+        "instruction.md",  # universal, apart from a scaffold unit that carries none
+        "manifest.json",
+        "environment",
+        "checks",  # ANSWER MATERIAL
+        "reference",  # ANSWER MATERIAL -- never present on a public unit
     }
 )
 
