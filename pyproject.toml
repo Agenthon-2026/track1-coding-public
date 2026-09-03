@@ -24,6 +24,11 @@ dependencies = [
   "qfbench2-common>=2.3.0,<3",
   "pytest>=8.2",
   "pandas>=2.1",
+  # pandas does not read .parquet without an engine, and FOUR units' checks do exactly that --
+  # t1-EXAMPLE-bs-greeks-pde, t1-double-sort, t1-residual-momentum, t1-stable-residual (measured;
+  # SUBMISSION_CLI.md says the same). Omitting it reproduces the pytest-shaped failure this
+  # comment block already records: an import error inside the checks, scored as a wrong answer.
+  "pyarrow>=15",
   "scikit-learn>=1.4",
 ]
 
