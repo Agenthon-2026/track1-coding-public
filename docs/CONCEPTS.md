@@ -322,25 +322,19 @@ resource compliance, finance correctness) that every submission attempt must pas
 
 ---
 
-## What is the FinanceZero baseline?
+## Is there a baseline agent to beat?
 
-**FinanceZero** is the baseline agent that all participants must beat. It is a deliberately
-simple agent: it packages a single language model call in a Docker image. Given a task
-instruction, it asks the model once and writes the response to `/app/output`. No tool use, no
-iteration, no code execution.
+**No. Track 1 ships no official baseline agent, and there is no reference score you must clear.**
+Entries are ranked against each other on mean pass@1 over the `private-test` split.
 
-FinanceZero represents the minimum level of sophistication: if a task can be solved by just
-asking a general-purpose language model once, it is too easy for the competition. All Track 1
-tasks are designed to require something more — correct numerical computation, a working
-algorithm, or a structured code solution.
+The design bar the tasks are held to is unchanged, and it is worth knowing as a task author or as
+an entrant: a task that a general-purpose language model solves in a single call, with no tool
+use and no iteration, is too easy for the competition. Every Track 1 task is meant to require
+something more — correct numerical computation, a working algorithm, or a structured code
+solution.
 
-You can find the FinanceZero packaging in `public/baselines/`. Running it gives you a sense of
-the score a "lazy" agent achieves — and your agent needs to clearly exceed it on the
-`private-test` split.
-
-**FinanceZero in one sentence:** the single-call LLM baseline that all Track 1 agents must
-beat; it represents the minimum score an unspecialised language model achieves with zero
-agentic effort.
+`baselines/` documents how an agent reaches a model and how it must be packaged. It is the
+contract, not a competitor.
 
 ---
 

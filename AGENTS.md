@@ -48,7 +48,7 @@ PR. This check will fail if any of the above is detected.
 | `units/t1-EXAMPLE-bs-greeks-pde/` | The canonical worked exemplar | Read before creating any task |
 | `qfbench2_track_coding/scoring.py` | The Track 1 verifier and pass@k scorer | Call it; do not rewrite it |
 | `templates/` | Copy-to-start templates | Start every new task from here |
-| `baselines/` | FinanceZero packaging | Reference to understand the baseline |
+| `baselines/` | Model access + agent packaging rules | No baseline agent ships; read for the contract |
 
 ---
 

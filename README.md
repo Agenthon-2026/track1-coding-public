@@ -8,8 +8,8 @@ submit their agent as a **Docker image** — a self-contained program that accep
 and writes its output to `/app/output`. The official leaderboard grades the agent on **pass@1**
 with one execution per task: the share of tasks solved, over a fixed denominator, with no
 confidence interval. (`pass@3` — the chance any of three attempts solves a task — is reported only
-by the offline Harbor development report, not by the leaderboard.) The baseline to beat is
-**FinanceZero**, a simple single-call language-model agent.
+by the offline Harbor development report, not by the leaderboard.) **Track 1 ships no official
+baseline agent**: you are ranked against the other entries, not against a reference agent.
 
 **This repo contains practice tasks and examples, not answers.** The ~30 hidden evaluation tasks
 and their reference solutions live in the sealed private repo, which no participant can access. Use
@@ -39,7 +39,7 @@ shared toolkit: `Agenthon-2026/Agenthon2026-public`, file `docs/GLOSSARY.md`.
 | `templates/` | Blank card.toml, instruction.md, Dockerfile, and test templates to copy |
 | `units/` | Practice tasks from the public-dev split; the exemplar is `t1-EXAMPLE-bs-greeks-pde` |
 | `qfbench2_track_coding/scoring.py` | The verifier and pass@k scorer (what the harness runs on your agent) |
-| `baselines/` | The FinanceZero baseline — package a single LLM call; your target to beat |
+| `baselines/` | Model access and packaging rules for a Track 1 agent (no baseline agent ships) |
 | `.github/workflows/` | CI: canary uniqueness, manifest checksums, public-safety scans |
 
 ## What is NOT in this repo
@@ -221,8 +221,10 @@ pass@1 over one execution per task with a fixed denominator (a wrong, crashed, t
 missing output stays in the denominator as zero); it publishes no confidence interval. The Harbor
 adapter's pass@3 with bootstrap CIs is an offline development report, not the official aggregate.
 
-The baseline to beat is **FinanceZero** (see `baselines/`). On the hidden `private-test` split,
-your agent must achieve a higher mean pass@1 than FinanceZero to be considered competitive.
+**There is no official baseline agent.** Track 1 ranks entries against each other on mean pass@1
+over the hidden `private-test` split; there is no reference score you must clear to be admitted.
+`baselines/` documents how an agent reaches a model and how it must be packaged — not an agent to
+beat.
 
 Full scoring code is in `qfbench2_track_coding/scoring.py`. It inherits all shared logic from the
 `qfbench2-common` toolkit. Install it with:
@@ -284,7 +286,7 @@ qfbench2 smoke units/t1-EXAMPLE-bs-greeks-pde /tmp/smoke-out --track coding
    `[environment]` (`cpus = 16`, `memory = "128G"`, `gpu = true`); the card is authoritative.
 5. **Metric.** Mean pass@1, one execution per task, fixed denominator, no confidence interval.
    (pass@3 with bootstrap CIs exists only in the offline Harbor report.)
-6. **Baseline.** Beat FinanceZero on pass@1 over the `private-test` split.
+6. **Baseline.** None. Entries are ranked against each other on pass@1 over the `private-test` split.
 7. **Data cutoff.** Each task card declares a `data_cutoff`; agents must not use data beyond it.
 
 **Where the full rules live.** There is no separate rules website. The rules that bind a Track 1
