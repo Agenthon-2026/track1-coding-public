@@ -368,7 +368,17 @@ def _run_trusted_checks(
         OrganizerFault: the scoring environment has no importable pytest, or pytest exited with
             an internal (3) or usage (4) error without judging the submission.
     """
-    checks = pathlib.Path(unit_dir) / "checks" / _CHECKS_ENTRY
+    # Resolved before anything uses them. The subprocess below runs with `cwd=unit_dir`, so a
+    # RELATIVE `unit_dir` -- which is exactly what the README's own command produces
+    # (`qfbench2 smoke units/<unit> <out> --track coding`) -- makes the checks path resolve
+    # against the new working directory, where it does not exist. pytest then exits 4 (usage
+    # error) and `_HARNESS_FAULT_EXIT_CODES` correctly refuses to score it, so the participant
+    # gets an OrganizerFault traceback for running the documented command. Measured on
+    # `units/t1-EXAMPLE-bs-greeks-pde`: relative -> exit 4, absolute -> the checks run.
+    unit_dir = pathlib.Path(unit_dir).resolve()
+    output_dir = pathlib.Path(output_dir).resolve()
+
+    checks = unit_dir / "checks" / _CHECKS_ENTRY
     if not checks.is_file():
         return False, {"trusted_checks": "absent", "path": str(checks)}
 

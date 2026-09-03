@@ -34,7 +34,7 @@ metric              = "pass@k"
 admissibility_gates = ["g0_integrity", "g1_schema", "g2_cutoff_resource", "g3_domain_semantics"]
 
 [scoring.params]
-k_values = [1, 3]
+k_values = [1]
 
 [verifier]
 timeout_sec = 300.0

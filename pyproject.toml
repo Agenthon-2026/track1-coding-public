@@ -24,6 +24,10 @@ dependencies = [
   "qfbench2-common>=2.3.0,<3",
   "pytest>=8.2",
   "pandas>=2.1",
+  # The Parquet deliverables. pandas does not read .parquet without an engine, and two units'
+  # checks do exactly that, so omitting it reproduces the pytest-shaped failure this comment
+  # block already records: an import error inside the checks, scored as if the answer were wrong.
+  "pyarrow>=15",
   "scikit-learn>=1.4",
 ]
 
