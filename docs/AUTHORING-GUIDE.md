@@ -40,8 +40,8 @@ docker build -t finance-bench-sandbox:latest -f docker/sandbox.Dockerfile .
 
 The `qfbench2` CLI is what you use to validate, manifest, and smoke-test your task. Its command
 groups are `smoke`, `card`, `manifest`, `eval`, and `track1` (`qfbench2-smoke` is a back-compat
-alias for `qfbench2 smoke`). The `track1` group runs units under Harbor and scores official
-pass@1/pass@3 — see Step 9. If the command is not found after install, run `pip install --user`
+alias for `qfbench2 smoke`). The `track1` group runs units under Harbor and produces the offline
+pass@1/pass@3 development report — see Step 9. If the command is not found after install, run `pip install --user`
 and add `~/.local/bin` to your PATH. You do **not** install numpy/scipy/pandas/pytest yourself —
 they live in the shared base image.
 
@@ -449,8 +449,8 @@ qfbench2 smoke public/units/<your-task-id> /tmp/smoke-out --track coding
 python .github/validate_units.py coding
 ```
 
-To additionally verify the unit under Harbor (the QFBench-native runner) and get official
-pass@1/pass@3, use the `track1` adapter (it wraps `qfbench2_common.track1.harbor`, which shells
+To additionally verify the unit under Harbor (the QFBench-native runner) and get the offline
+pass@1/pass@3 development report (not the official single-pass aggregate), use the `track1` adapter (it wraps `qfbench2_common.track1.harbor`, which shells
 out to harbor; needs the optional `track1-harbor` extra, `harbor>=0.15.0`):
 
 ```bash

@@ -45,8 +45,9 @@ metric              = "pass@k"
 admissibility_gates = ["g0_integrity", "g1_schema", "g2_cutoff_resource", "g3_domain_semantics"]
 
 [scoring.params]
-# Organizers run pass@1 (primary leaderboard) and pass@3 (secondary).
-k_values = [1, 3]
+# The official leaderboard runs each task once: single-pass pass@1, fixed denominator, no CI.
+# k_values above 1 belong to the offline Harbor report, never to the official board.
+k_values = [1]
 
 [verifier]
 # How long the verifier (pytest + invariant checks) may run after the agent exits.

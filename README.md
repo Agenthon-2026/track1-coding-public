@@ -5,9 +5,11 @@
 This is the **public practice kit** for Track 1 of Agenthon 2026 (a NeurIPS competition). Track
 1 asks one question: *can an AI coding agent write correct quantitative-finance code?* Participants
 submit their agent as a **Docker image** — a self-contained program that accepts the verb `solve`
-and writes its output to `/app/output`. The agent is graded on **pass@1** (the chance its first
-attempt solves a task) and **pass@3** (the chance any of three attempts solves it). The baseline
-to beat is **FinanceZero**, a simple single-call language-model agent.
+and writes its output to `/app/output`. The official leaderboard grades the agent on **pass@1**
+with one execution per task: the share of tasks solved, over a fixed denominator, with no
+confidence interval. (`pass@3` — the chance any of three attempts solves a task — is reported only
+by the offline Harbor development report, not by the leaderboard.) The baseline to beat is
+**FinanceZero**, a simple single-call language-model agent.
 
 **This repo contains practice tasks and examples, not answers.** The ~30 hidden evaluation tasks
 and their reference solutions live in the sealed private repo, which no participant can access. Use
@@ -103,7 +105,7 @@ qfbench2 smoke units/t1-EXAMPLE-bs-greeks-pde <output_dir> --track coding
 # or under Harbor (QFBench-native; reward in /logs/verifier/reward.txt):
 harbor run --path units --task-name t1-EXAMPLE-bs-greeks-pde --agent <agent> --model <model>
 
-# or via the qfbench2 Harbor adapter — launch a job, then score official pass@1/pass@3:
+# or via the qfbench2 Harbor adapter — launch a job, then produce the offline pass@1/pass@3 report:
 qfbench2 track1 harbor-run --units-dir units --jobs-dir <dir> --job-name <name>
 qfbench2 track1 score-harbor-job --job-dir <dir>/<name> --units-dir units
 ```
@@ -215,7 +217,9 @@ The harness runs four sequential admissibility gates on each attempt:
 | `g3_domain_semantics` | Pytest test suite passed; financial invariants hold |
 
 Only an attempt that passes all four gates earns `score = 1.0`. The leaderboard ranks by mean
-pass@1 (primary) and mean pass@3 (secondary), both with 95% bootstrap confidence intervals.
+pass@1 over one execution per task with a fixed denominator (a wrong, crashed, timed-out or
+missing output stays in the denominator as zero); it publishes no confidence interval. The Harbor
+adapter's pass@3 with bootstrap CIs is an offline development report, not the official aggregate.
 
 The baseline to beat is **FinanceZero** (see `baselines/`). On the hidden `private-test` split,
 your agent must achieve a higher mean pass@1 than FinanceZero to be considered competitive.
@@ -278,7 +282,8 @@ qfbench2 smoke units/t1-EXAMPLE-bs-greeks-pde /tmp/smoke-out --track coding
    do not read either as the agent's limit.
 4. **Resources.** 16 vCPUs, 128 GB RAM, GPU available. Every unit card declares this in
    `[environment]` (`cpus = 16`, `memory = "128G"`, `gpu = true`); the card is authoritative.
-5. **Metric.** Mean pass@1 (primary), mean pass@3 (secondary), 95% bootstrap CIs.
+5. **Metric.** Mean pass@1, one execution per task, fixed denominator, no confidence interval.
+   (pass@3 with bootstrap CIs exists only in the offline Harbor report.)
 6. **Baseline.** Beat FinanceZero on pass@1 over the `private-test` split.
 7. **Data cutoff.** Each task card declares a `data_cutoff`; agents must not use data beyond it.
 

@@ -93,8 +93,8 @@ python -m pytest checks/test_outputs.py --json-report --json-report-file=<output
 If all tests pass, the agent earns a reward of 1.0 for that attempt; if any test fails, the
 reward is 0.0. `test.sh` records this in two places — `/logs/verifier/reward.txt` (Harbor,
 `1`/`0`) and `<output>/reward.json` (the Agenthon g0–g3 verifier) — so the same unit runs under
-both runners. Under Harbor, organizers launch a job with `qfbench2 track1 harbor-run` and score
-official pass@1/pass@3 with `qfbench2 track1 score-harbor-job` (a thin adapter over
+both runners. Under Harbor, organizers launch a job with `qfbench2 track1 harbor-run` and produce
+the offline pass@1/pass@3 development report with `qfbench2 track1 score-harbor-job` (a thin adapter over
 `qfbench2_common.track1.harbor`); the Agenthon path is `qfbench2 smoke`.
 
 **pytest in one sentence:** a Python tool that runs your test functions and reports which ones
@@ -177,9 +177,11 @@ Suppose we give an agent 3 attempts on each of 4 tasks. Here are the results:
 
 So this agent has **mean pass@1 = 0.50** and **mean pass@3 = 0.75** over these 4 tasks.
 
-**pass@1 is the primary metric for the leaderboard** (higher is better). pass@3 is the
-secondary metric. Both are reported with 95% bootstrap confidence intervals so we can tell
-whether one team is genuinely better than another.
+**pass@1 is the leaderboard metric** (higher is better), computed from **one execution per
+task** over the signed roster with a fixed denominator, and published without a confidence
+interval (ruled 2026-09-03). pass@3, and the bootstrap confidence intervals in the table above,
+belong to the offline Harbor development report, which runs several attempts per task; they
+are not the official aggregate.
 
 ### Why not just use "accuracy"?
 
@@ -189,7 +191,7 @@ consistency. A team whose agent solves each task 2 out of 3 times scores better 
 whose agent solves half the tasks perfectly and fails all others.
 
 **pass@1 in one sentence:** the fraction of tasks where the agent's *first* attempt passes all
-tests; the primary leaderboard metric.
+tests; the leaderboard metric.
 
 **pass@3 in one sentence:** the fraction of tasks where *at least one* of three attempts passes;
 rewards consistency.
