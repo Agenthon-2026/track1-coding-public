@@ -1,14 +1,12 @@
-# FinanceZero Baseline
+# Model access and agent packaging
 
-FinanceZero is the official Track 1 minimal baseline.  Submitted agents must
-beat it on mean `pass@1` over the private-test split.
+**Track 1 ships no official baseline agent, and there is no reference score to beat.** Entries are
+ranked against each other on mean `pass@1` over the private-test split.
 
-## What FinanceZero does
-
-FinanceZero makes a **single model call** per task with the instruction text
-verbatim as the prompt, writes whatever code the model returns directly to a
-file, executes it, and exits.  No tool use, no reflection, no self-repair.  It
-is deliberately minimal to set a low but non-trivial threshold.
+This page is the contract: how an agent reaches a model, and how it must be packaged. It uses a
+deliberately minimal *example* agent throughout — one model call per task, the instruction text as
+the prompt, write the result, run it, exit — because that is the shortest thing that exercises
+every part of the contract. It is an illustration, not a competitor and not a threshold.
 
 The call goes out over the **restricted** eval network the only way any
 submission can reach a model:
@@ -25,34 +23,15 @@ and there is no mechanism to supply one. The alternative is a BYO entry, which
 ships a **LoRA adapter of rank ≤ 64** — not model weights — that the organizer
 loads onto the base model behind `$MODEL_ENDPOINT`. See `SUBMISSION_CLI.md`.
 
-There is no open internet either way; every connection is logged. FinanceZero
-is a **category `api`** entry: it ships no adapter — the whole
-contribution is the prompt and the packaging. Its model version is pinned (a
-dated snapshot), its training cutoff is disclosed in the submission metadata,
-and vendor-side tools (web search, code execution, retrieval) are disabled in
-the API call, as the rules require of every submission.
+There is no open internet either way; every connection is logged. An agent of this shape is a
+**category `api`** entry: it ships no adapter — the whole contribution is the prompt and the
+packaging. Its model version is pinned (a dated snapshot), its training cutoff is disclosed in the
+submission metadata, and vendor-side tools (web search, code execution, retrieval) are disabled in
+the call, as the rules require of every submission.
 
-Approximate `pass@1` on public-dev split (QFBench v1 migration):
+## Packaging an agent for the solve CLI
 
-| Category | FinanceZero pass@1 |
-|---|---|
-| `derivatives-pricing` | ~0.42 |
-| `fixed-income` | ~0.51 |
-| `credit` | ~0.34 |
-| `factor-research` | ~0.38 |
-| `backtesting` | ~0.47 |
-| `risk-management` | ~0.39 |
-| `microstructure` | ~0.28 |
-| `fx` | ~0.44 |
-| `nlp-on-finance` | ~0.31 |
-| `cross-domain` | ~0.19 |
-
-*Numbers are indicative from the QFBench v1 migration run; final numbers will
-be published with the competition.*
-
-## Packaging FinanceZero as a solve-CLI agent
-
-FinanceZero must conform to the Track 1 CLI contract and write its deliverables
+Your agent must conform to the Track 1 CLI contract and write its deliverables
 to `/app/output` (the QFBench/Harbor output convention). At scoring time it runs
 on the internal eval network with the standard restricted-mode environment
 contract (this is the same invocation every submission gets):
@@ -81,15 +60,11 @@ the container); `MODEL_ENDPOINT` points at the organizer-hosted
 OpenAI-compatible endpoint when available, and `MODEL_NAME` names the served
 model. No API keys are injected and none exist (policy 2026-08-04). For a local smoke run without
 the eval network, the harness falls back to `--network=none` with a warning —
-the baseline then gets no model access, so expect reward 0.
+an agent then gets no model access, so expect reward 0.
 
-Reference implementation (not included in this repo — participants receive
-the image hash on the leaderboard).
+### Build your agent image
 
-### Build your own baseline image
-
-If you want to reproduce or extend FinanceZero, build on the **shared sandbox
-base image**, `finance-bench-sandbox:latest`. That base is built **once** from
+Build on the **shared sandbox base image**, `finance-bench-sandbox:latest`. That base is built **once** from
 `docker/sandbox.Dockerfile` (+ `docker/requirements-sandbox.txt`) and already
 bakes both the financial stack (numpy/pandas/scipy/pyarrow) and the
 verification stack (pytest, pytest-json-report, pytest-timeout):
@@ -99,30 +74,30 @@ verification stack (pytest, pytest-json-report, pytest-timeout):
 docker build -t finance-bench-sandbox:latest -f docker/sandbox.Dockerfile .
 ```
 
-Then keep your baseline Dockerfile **thin** — `FROM` the shared base and add
+Then keep your Dockerfile **thin** — `FROM` the shared base and add
 only what is not already in it:
 
 ```
-Dockerfile.baseline (sketch)
+Dockerfile (sketch)
 ─────────────────────────────
 FROM finance-bench-sandbox:latest
 
 # The standard financial + verification stack is already in the base image,
 # so do NOT reinstall numpy/pandas/scipy/pytest here. Add only a pinned extra
-# the base does not provide. FinanceZero talks to the house endpoint, so it
-# needs an OpenAI-compatible client pointed at $MODEL_ENDPOINT through the
+# the base does not provide. An api-category agent talks to the house endpoint,
+# so it needs an OpenAI-compatible client pointed at $MODEL_ENDPOINT through the
 # audited proxy (HTTPS_PROXY). Vendor SDKs are of no use here: their endpoints
 # are refused by the proxy (policy 2026-08-04) and no API keys are injected.
 RUN pip install --no-cache-dir openai==1.40.0
 
-COPY finance_zero.py /agent/finance_zero.py
+COPY agent.py /agent/agent.py
 LABEL qfbench2.interface_version="2.0"
 
-ENTRYPOINT ["python", "/agent/finance_zero.py"]
+ENTRYPOINT ["python", "/agent/agent.py"]
 CMD ["solve", "--task-dir", "/input", "--out", "/app/output"]
 ```
 
-`finance_zero.py` entry point pseudocode:
+`agent.py` entry point pseudocode:
 
 ```python
 import argparse, pathlib, subprocess, sys
@@ -156,9 +131,10 @@ if __name__ == "__main__":
     solve(args.task_dir, args.out)
 ```
 
-## How to beat FinanceZero
+## Where the headroom is
 
-Any of the following improvements are expected to push well above the baseline:
+The example above is the floor of what the contract allows, not a target. Any of the following is
+expected to do substantially better:
 
 - Multi-turn agent loop with self-repair on test failures.
 - Retrieval-augmented code generation (offline, all data pre-baked into the image).

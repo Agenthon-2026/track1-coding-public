@@ -15,9 +15,8 @@ Every task card sets `[metadata] category` to one of the ten IDs below. The cate
 which domain expert reviews the task and which automated sanity checks run at gate
 `g3_domain_semantics` (the fourth quality gate; see `public/docs/CONCEPTS.md` for what gates are).
 
-Difficulty default: **medium** — the task must beat the FinanceZero baseline (a simple one-shot
-language-model call) while still being solvable by a well-designed agent in under 30 minutes of
-wall-clock time.
+Difficulty default: **medium** — the task must defeat a simple one-shot language-model call while
+still being solvable by a well-designed agent in under 30 minutes of wall-clock time.
 
 ---
 
@@ -731,7 +730,7 @@ that also has FX exposure (combining credit + fx), or building a factor signal f
 NLP and then backtesting it properly (combining nlp-on-finance + factor-research + backtesting).
 
 Because real finance problems rarely fall neatly into one box, cross-domain tasks are the
-hardest in Track 1. FinanceZero (the single-call baseline) is especially likely to fail here,
+hardest in Track 1. A single-call language-model attempt is especially likely to fail here,
 because solving the task requires maintaining coherent state across at least two separate
 computation problems.
 
@@ -786,8 +785,8 @@ Cross-domain tasks are **almost always hard**. They require:
 - Passing the invariant checks for both sub-problems.
 - A consistent interface between the two parts (correct data types, units, and conventions).
 
-FinanceZero is very unlikely to solve a cross-domain task, but a well-designed agent that
-decomposes the problem into steps can succeed.
+A single-call language-model attempt is very unlikely to solve a cross-domain task, but a
+well-designed agent that decomposes the problem into steps can succeed.
 
 ### Common mistakes
 

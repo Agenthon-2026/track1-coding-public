@@ -475,8 +475,8 @@ missing dependencies, and reward.json format errors.
 1. Create a branch: `git checkout -b task/<your-task-id>`
 2. Commit all files in `public/units/<your-task-id>/`
 3. Push and open a PR to the `main` branch
-4. Fill the PR description template (scope, category, invariants tested, FinanceZero failure
-   evidence if marking the task as "hard")
+4. Fill the PR description template (scope, category, invariants tested, and — if marking the
+   task as "hard" — evidence that a single-call language-model attempt fails it)
 5. CI runs the review checklist automatically
 6. A domain-expert reviewer (auto-assigned by category label) must approve
 
