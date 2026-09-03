@@ -191,7 +191,7 @@ consistency. A team whose agent solves each task 2 out of 3 times scores better 
 whose agent solves half the tasks perfectly and fails all others.
 
 **pass@1 in one sentence:** the fraction of tasks where the agent's *first* attempt passes all
-tests; the primary leaderboard metric.
+tests; the leaderboard metric.
 
 **pass@3 in one sentence:** the fraction of tasks where *at least one* of three attempts passes;
 rewards consistency.

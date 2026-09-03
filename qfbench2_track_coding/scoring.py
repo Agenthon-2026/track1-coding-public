@@ -23,8 +23,9 @@ DI-verifier pattern (multi-phase partial credit + root-cause labels)
     failure-map JSONL without changing the reward.
 
 Leaderboard ranking
-    Primary:   mean pass@1 across tasks (with 95 % bootstrap CI).
-    Secondary: mean pass@3 across tasks (with 95 % bootstrap CI).
+    Official: mean pass@1 across the signed roster, ONE execution per task, fixed denominator,
+    no confidence interval (ruled 2026-09-03). pass@3 and bootstrap CIs exist only in the
+    offline Harbor development report (`qfbench2 track1 score-harbor-job`).
     LEADERBOARD_SORT = "desc" (higher is better).
 
 Usage
