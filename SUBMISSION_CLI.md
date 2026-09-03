@@ -103,7 +103,8 @@ default `--max-lora-rank` is 16, so omitting the flag imposes a tighter cap than
    submission metadata (`models[].training_cutoff` in `submission.json`). For a BYO entry that
    is the organizer's base model, which your adapter is trained on top of.
 4. **Pin temperature/seed** where the API supports it. Entries are verified
-   *statistically* (bootstrap-CI overlap on organizer rerun). That applies to BYO entries too: a
+   *statistically* (bootstrap-CI overlap on organizer rerun for T2/T3/T4; for T1, the single-pass
+   per-unit verdicts must agree exactly). That applies to BYO entries too: a
    BYO submission reaches its adapter through the same endpoint as an `api` one, so it is not
    bit-reproducible either.
 5. **Budget (FINAL, ruled 2026-08-28).** A uniform per-unit budget applies
