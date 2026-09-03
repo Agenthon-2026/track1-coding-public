@@ -11,7 +11,7 @@ confidence interval. (`pass@3` — the chance any of three attempts solves a tas
 by the offline Harbor development report, not by the leaderboard.) **Track 1 ships no official
 baseline agent**: you are ranked against the other entries, not against a reference agent.
 
-**This repo contains practice tasks and examples, not answers.** The ~30 hidden evaluation tasks
+**This repo contains practice tasks and examples, not answers.** The hidden evaluation tasks
 and their reference solutions live in the sealed private repo, which no participant can access. Use
 this starter kit to test your agent locally before submitting to the leaderboard.
 
@@ -46,7 +46,7 @@ shared toolkit: `Agenthon-2026/Agenthon2026-public`, file `docs/GLOSSARY.md`.
 
 These live in the **sealed private repo** and are never visible to participants:
 
-- The ~30 hidden `private-test` evaluation tasks
+- The hidden `private-test` evaluation tasks
 - Oracle `solve.sh` reference solutions
 - The sealed final scorer (pass@k aggregation + failure map)
 - The canary GUID registry
