@@ -15,7 +15,8 @@ ARRAY LENGTHS IN THE ARTIFACT CARRY NO INFORMATION. Every array is padded to a f
 with random decoys and sorted, so the number of entries is not the number of held-out units. That
 is enforced here, not merely documented: an array whose length does not match its declared
 `pad_targets` entry fails this check, because an unpadded array discloses the roster size. The
-artifact this replaced did exactly that -- two arrays agreeing at 14 read as a roster of 14.
+artifact this replaced did exactly that: two independent arrays of equal length read as
+a roster of that length.
 
 `blessed_digests` lists file hashes ruled public by the organizer; they are exempt from arm 3 and
 each carries its rationale. The generator now subtracts digests already present in this repository,
@@ -48,13 +49,23 @@ def main() -> int:
 
     # Fail closed on an unpadded array. A hand-edited or hand-regenerated artifact is how the
     # roster size leaked before, and how the roster went 81 commits stale with no signal.
+    # PADDED_ARRAYS is fixed here, not read from the artifact. Iterating the artifact's own
+    # pad_targets let it nominate which of its arrays were checked: dropping a key skipped that
+    # array, so an unpadded one passed. The artifact does not get a say in what is verified.
+    PADDED_ARRAYS = ("id_sha256", "canary_guid_sha256", "input_sha256")
     pad_targets = art.get("pad_targets")
     if not pad_targets:
         print("check_heldout_roster: artifact declares no pad_targets — regenerate it with "
               "scripts/gen_heldout_roster_hashes.py (organizer-side). Refusing to pass: an "
               "unpadded artifact discloses the held-out roster size through its array lengths.")
         return 1
-    for key, target in pad_targets.items():
+    if set(pad_targets) != set(PADDED_ARRAYS):
+        print(f"check_heldout_roster: pad_targets declares {sorted(pad_targets)}, expected "
+              f"{sorted(PADDED_ARRAYS)}. Refusing to pass: an artifact cannot choose which of "
+              "its arrays are checked for padding.")
+        return 1
+    for key in PADDED_ARRAYS:
+        target = pad_targets[key]
         if len(art.get(key, [])) != target:
             print(f"check_heldout_roster: {key} has {len(art.get(key, []))} entries, expected the "
                   f"fixed pad target {target}. Refusing to pass: the roster size may be disclosed.")
