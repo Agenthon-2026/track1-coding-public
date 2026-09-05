@@ -95,7 +95,9 @@ reward is 0.0. `test.sh` records this in two places — `/logs/verifier/reward.t
 `1`/`0`) and `<output>/reward.json` (the Agenthon g0–g3 verifier) — so the same unit runs under
 both runners. Under Harbor, organizers launch a job with `qfbench2 track1 harbor-run` and produce
 the offline pass@1/pass@3 development report with `qfbench2 track1 score-harbor-job` (a thin adapter over
-`qfbench2_common.track1.harbor`); the Agenthon path is `qfbench2 smoke`.
+`qfbench2_common.track1.harbor`). `qfbench2 smoke` verifies existing deliverables; it does
+not launch the agent. For a local run with the required input/output mounts and a reward check,
+follow [README step 6](../README.md#6-run-your-agent-then-check-its-output).
 
 **pytest in one sentence:** a Python tool that runs your test functions and reports which ones
 pass and which ones fail.

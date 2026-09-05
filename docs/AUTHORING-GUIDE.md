@@ -396,7 +396,8 @@ the pytest stack already baked into the base image. It writes the reward signal 
 forms: `/logs/verifier/reward.txt` (Harbor, `1`/`0`) and `<output>/reward.json` +
 `pytest_report.json` (the Agenthon g0–g3 verifier plus the DI failure-label overlay). Writing
 both means a unit runs unchanged under **Harbor** (`harbor run --path units ...`) and the
-**Agenthon harness** (`qfbench2 smoke <unit> <out> --track coding`). If you change the reward
+**Agenthon output verifier** (`qfbench2 smoke <unit> <out> --track coding`, after the agent
+has run and with the checker's required `/input` and output mounts). If you change the reward
 schema, the g1 gate will fail.
 
 **Why this step exists:** The tests are the competition's ground truth. Weak tests (that pass
@@ -442,8 +443,9 @@ qfbench2 card validate public/units/<your-task-id>/
 # 2. Public-safety check (split-tiered firewall: scans for oracle files, solution dirs, etc.)
 qfbench2 manifest assert-public-safe public/units/<your-task-id>/
 
-# 3. Smoke test (builds the thin unit image, runs a mock solve, runs checks offline)
-qfbench2 smoke public/units/<your-task-id> /tmp/smoke-out --track coding
+# 3. Run your agent and the checker with the Docker commands in README step 6,
+#    setting UNIT to this task and using a fresh OUT. Require reward 1.0.
+#    qfbench2 smoke does not build an image or provide a mock solve.
 
 # 4. Run the full per-track unit validator (the same one CI runs)
 python .github/validate_units.py coding
@@ -461,12 +463,13 @@ qfbench2 track1 score-harbor-job --job-dir <dir>/<name> --units-dir public/units
 **Confirm the oracle passes 100%.** Run your private reference solution against your own checks
 and verify every test passes before you ship — if the oracle cannot pass, the tests are wrong.
 
-If any command fails, fix the errors before opening a PR. CI runs the same commands and will
-reject the PR if they fail.
+If any validation command fails or the checker writes a zero reward, fix the errors before
+opening a PR. CI validates the cards and repository contracts; it does not run your agent.
 
-**Why this step exists:** Catching errors locally takes 2 minutes; catching them in CI after a
-failed PR round-trip takes much longer. The smoke test in particular catches Docker build errors,
-missing dependencies, and reward.json format errors.
+**Why this step exists:** Building and running the agent, then executing the checker, tests
+the image and its deliverables. Card validation and `qfbench2 smoke` do not substitute for that
+execution. See [README step 6](../README.md#6-run-your-agent-then-check-its-output) for the
+input/output mounts and explicit reward assertion.
 
 ---
 
