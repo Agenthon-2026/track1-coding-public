@@ -54,7 +54,7 @@ public Track-1 units were migrated from QFBench's 87 tasks by `main/scripts/migr
 docker build -t finance-bench-sandbox:latest -f docker/sandbox.Dockerfile .
 
 # 1a. under Harbor, raw QFBench-native invocation: reward in /logs/verifier/reward.txt
-harbor run --path units --task-name t1-bs-greeks-pde --agent <agent> --model <model>
+harbor run --path units --task-name t1-EXAMPLE-bs-greeks-pde --agent <agent> --model <model>
 
 # 1b. under Harbor via the qfbench2 adapter (launch a job, then produce the offline pass@1/pass@3 report):
 qfbench2 track1 harbor-run --units-dir units --jobs-dir <dir> --job-name <name>
@@ -66,9 +66,12 @@ qfbench2 track1 score-harbor-job --job-dir <dir>/<name> --units-dir units
 # only for an operator running this path:
 #   pip install "qfbench2-common[track1-harbor] @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.3.1#subdirectory=common"
 
-# 1c. or under the Agenthon harness (g0-g3 + reward.json), e.g. local smoke:
-qfbench2 smoke units/t1-bs-greeks-pde <output_dir> --track coding
+# 1c. For the direct Docker agent-then-checker flow, follow README step 6.
+# qfbench2 smoke verifies existing outputs; it does not launch either container.
 ```
+
+The direct Docker flow is documented in [README step 6](../README.md#6-run-your-agent-then-check-its-output).
+It mounts the unit at `/input`, binds both output paths, and checks the written reward.
 
 The dual-runner contract is unchanged: Harbor writes `/app/output` + `/logs/verifier/reward.txt`;
 the Agenthon harness reads `<output>/reward.json` (+ `pytest_report.json`). pass@1 / pass@3 are

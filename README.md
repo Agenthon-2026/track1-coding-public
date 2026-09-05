@@ -92,31 +92,27 @@ pytest-timeout), so units never install the standard stack themselves:
 docker build -t finance-bench-sandbox:latest -f docker/sandbox.Dockerfile .
 ```
 
-### 4. Smoke-test the exemplar
+### 4. Understand the local verification steps
 
-The smoke runner builds the thin unit image, runs a mock solve, then runs the checks
-**offline** (`python -m pytest`, no network) and writes the reward artifacts. Track 1 units
-run under **both** runners:
+`qfbench2 smoke <unit_dir> <output_dir> --track coding` verifies deliverables that already
+exist. It does not build or execute an agent image, and there is no bundled mock agent.
+First build your own agent, then follow step 6 to run it and check its output in the sandbox.
+The checker needs the unit at `/input` and the output mounted at both `/app/output` and
+`/output`; a host output directory alone does not provide that layout.
+
+Harbor is a separate, optional execution path. With Harbor and your chosen agent installed:
 
 ```bash
-# Agenthon harness (g0–g3 verifier + reward.json):
-qfbench2 smoke units/t1-EXAMPLE-bs-greeks-pde <output_dir> --track coding
-
-# or under Harbor (QFBench-native; reward in /logs/verifier/reward.txt):
 harbor run --path units --task-name t1-EXAMPLE-bs-greeks-pde --agent <agent> --model <model>
 
-# or via the qfbench2 Harbor adapter — launch a job, then produce the offline pass@1/pass@3 report:
+# Or launch through the toolkit adapter, then produce an offline development report:
 qfbench2 track1 harbor-run --units-dir units --jobs-dir <dir> --job-name <name>
 qfbench2 track1 score-harbor-job --job-dir <dir>/<name> --units-dir units
 ```
 
-`qfbench2-smoke` is kept as a back-compat alias for `qfbench2 smoke`. The full CLI is `smoke`,
-`card`, `manifest`, `eval`, and `track1`. The `track1` adapter wraps
-`qfbench2_common.track1.harbor`, which shells out to harbor (never imports it), so the core
-toolkit runs on Python 3.13 with harbor absent; the optional `track1-harbor` extra
-(`harbor>=0.15.0`, whose Python>=3.12 floor 3.13 already meets) is only for an operator running
-the Harbor path. If the mock
-solve passes, your local setup is correct.
+The `track1` adapter shells out to Harbor. Install the toolkit's optional `track1-harbor`
+extra to use it; Harbor is not required for the Docker check below. `qfbench2-smoke` is a
+back-compat alias for the output verifier `qfbench2 smoke`.
 
 ### 5. Build your agent Docker image
 
@@ -164,13 +160,41 @@ not the same for every unit. Across the 87 public units it ranges from 1200 to 5
 The checker (`checks/test.sh`) runs **offline** and writes the reward signal itself — do not
 write the reward files yourself.
 
-### 6. Run the local smoke test on your own agent
+### 6. Run your agent, then check its output
+
+Run this from the repository root after building the shared sandbox in step 3. Replace
+`your-agent:latest` with your image. Each run uses a fresh output directory.
 
 ```bash
-qfbench2 smoke units/t1-EXAMPLE-bs-greeks-pde <output_dir> --track coding --agent-image your-agent:latest
+set -e
+UNIT="$(cd units/t1-EXAMPLE-bs-greeks-pde && pwd)"
+OUT="$(mktemp -d)"
+
+# Your agent produces the deliverables.
+docker run --rm --network=none \
+  -v "$UNIT:/input:ro" \
+  -v "$OUT:/app/output" -v "$OUT:/output" \
+  your-agent:latest solve --task-dir /input --out /app/output
+
+# The supplied checker produces the reward artifacts.
+docker run --rm --network=none \
+  -e OUTPUT_DIR=/app/output -e PYTHONDONTWRITEBYTECODE=1 \
+  -v "$UNIT:/input:ro" \
+  -v "$OUT:/app/output" -v "$OUT:/output" \
+  finance-bench-sandbox:latest bash /input/checks/test.sh
+
+python -c 'import json,sys; r=json.load(open(sys.argv[1])); print(r); sys.exit(0 if r.get("reward")==1 else 1)' \
+  "$OUT/reward.json"
 ```
 
-This runs your Docker image against the exemplar's checks and reports pass/fail.
+The final command must exit zero and report `reward: 1.0`. `test.sh` itself exits zero even
+when checks fail, so its exit status alone is insufficient; inspect `pytest_report.json`
+for failed or skipped checks. The two output mounts bind the same host directory because
+public units use both paths.
+
+This is an offline local check. It provides no house-model access and does not exercise the
+official resource limits, attestation or CodaBench submission path. There is no `--agent-image`
+option on `qfbench2 smoke`; the first Docker command above runs the agent.
 
 ### 7. Submit to the leaderboard
 
@@ -235,24 +259,12 @@ pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026
 
 ---
 
-## Running the full smoke test suite
+## Checking additional public tasks
 
-First build the shared base once (`docker build -t finance-bench-sandbox:latest -f
-docker/sandbox.Dockerfile .`), then run all public-dev tasks through the smoke test (takes
-~5–20 minutes):
-
-```bash
-for unit in units/*/; do
-    echo "=== $unit ==="
-    qfbench2 smoke "$unit" /tmp/smoke-out --track coding
-done
-```
-
-Or target a specific task:
-
-```bash
-qfbench2 smoke units/t1-EXAMPLE-bs-greeks-pde /tmp/smoke-out --track coding
-```
+Repeat step 6 for each task you want to practice, changing `UNIT` to that task's directory.
+Use a fresh `OUT` each time and retain the resulting reward and pytest report. Your agent must
+produce that task's required deliverables before its checks can run; the toolkit does not
+supply answers or a mock solve. Runtime depends on your agent and the selected tasks.
 
 ---
 

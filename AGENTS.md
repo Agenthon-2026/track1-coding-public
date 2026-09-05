@@ -107,7 +107,9 @@ invariant tests (not hardcoded answers), canary check, and the test.sh reward sc
 3. Check `docs/AUTHORING-GUIDE.md` for the step-by-step task-creation procedure.
 4. Build the shared base once (`docker build -t finance-bench-sandbox:latest -f
    docker/sandbox.Dockerfile .`), then run `qfbench2 card validate units/<task-id>/` and
-   `qfbench2 smoke units/<task-id> <out> --track coding` before every commit. To run units
+   the README step 6 agent-then-checker flow before every commit. Require reward 1.0,
+   not merely a zero `test.sh` exit status. `qfbench2 smoke` verifies existing deliverables;
+   it does not run an agent or supply the checker's `/input` mount. To run units
    under Harbor and produce the offline pass@1/pass@3 development report (not the official single-pass aggregate), use the `track1` adapter: `qfbench2 track1
    harbor-run --units-dir units --jobs-dir <dir> --job-name <name>` then `qfbench2 track1
    score-harbor-job --job-dir <dir>/<name> --units-dir units` (wraps
