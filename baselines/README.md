@@ -1,5 +1,10 @@
 # Model access and agent packaging
 
+An optional participant implementation is available in
+[`iterative/`](iterative/README.md): an execution/repair/audit loop, container
+packaging, and a sealed local evaluation runner. Its test and measurement status
+is recorded separately; it is not an organizer reference score.
+
 **Track 1 ships no official baseline agent, and there is no reference score to beat.** Entries are
 ranked against each other on mean `pass@1` over the private-test split.
 

@@ -51,7 +51,7 @@ from typing import Any
 
 from qfbench2_common.contracts import OrganizerFault
 from qfbench2_common.failure_labels import FailureLabel
-from qfbench2_common.leakage import scan_canary
+from qfbench2_common.leakage import scan_tree
 from qfbench2_common.manifest import verify_manifest
 from qfbench2_common.scoring.passk import pass_at_k, suite_summary  # noqa: F401 (re-exported)
 from qfbench2_common.scoring.bootstrap import bootstrap_ci  # noqa: F401 (re-exported)
@@ -199,21 +199,17 @@ def _g2_cutoff_resource(ctx: dict[str, Any]) -> GateResult:
             detail={"elapsed_sec": elapsed, "timeout_sec": timeout},
         )
 
-    # Canary scan: search all text output for known GUIDs.
+    # Shared R-8 scanner: scan the complete output tree and return only a verdict.
+    # scan_canary was withdrawn in the pinned toolkit because it disclosed tokens.
     output_dir = pathlib.Path(ctx.get("output_dir", "/output"))
     registry: set[str] = ctx.get("canary_registry", set())
     if registry:
-        text_exts = {".py", ".json", ".txt", ".md", ".csv", ".log"}
-        hits: list[str] = []
-        for out_file in output_dir.rglob("*"):
-            if out_file.is_file() and out_file.suffix in text_exts:
-                content = out_file.read_text(errors="replace")
-                hits.extend(scan_canary(content, registry))
-        if hits:
+        leakage = scan_tree(output_dir, registry)
+        if leakage.canary_verdict == "hit":
             return GateResult(
                 passed=False,
                 label=FailureLabel.CONTAMINATION_CANARY,
-                detail={"canary_guids_found": hits},
+                detail=leakage.as_dict(),
             )
 
     return GateResult(passed=True)

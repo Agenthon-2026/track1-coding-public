@@ -210,3 +210,42 @@ class TestRewardJsonIsOptional:
         """`reward.json` and `pytest_report.json` are the grader's artifacts; an output that holds
         nothing else wrote nothing the checks could examine."""
         assert not scoring._g1_schema({"output_dir": str(_out(tmp_path, deliverable=None, reward=1.0))}).passed
+
+
+def test_g2_uses_supported_shared_scanner_on_clean_output(tmp_path):
+    import uuid
+    from qfbench2_track_coding.scoring import _g2_cutoff_resource
+
+    (tmp_path / "deliverable.csv").write_text("value\n0\n")
+    result = _g2_cutoff_resource(
+        {"output_dir": tmp_path, "canary_registry": {str(uuid.uuid4())}}
+    )
+    assert result.passed
+
+
+def test_g2_binary_canary_is_rejected_without_disclosing_token(tmp_path):
+    import json
+    import uuid
+    from qfbench2_track_coding.scoring import _g2_cutoff_resource
+
+    token = str(uuid.uuid4())
+    nested = tmp_path / "nested"
+    nested.mkdir()
+    (nested / "deliverable.bin").write_bytes(b"\x00" + token.upper().encode())
+    result = _g2_cutoff_resource({"output_dir": tmp_path, "canary_registry": {token}})
+    assert not result.passed
+    assert result.detail["hit_count"] == 1
+    assert token.lower() not in json.dumps(result.detail).lower()
+
+
+def test_g2_incomplete_scan_does_not_admit_output(tmp_path):
+    import uuid
+    import pytest
+    from qfbench2_common.contracts import OrganizerFault
+    from qfbench2_track_coding.scoring import _g2_cutoff_resource
+
+    (tmp_path / "link").symlink_to(tmp_path / "absent")
+    with pytest.raises(OrganizerFault):
+        _g2_cutoff_resource(
+            {"output_dir": tmp_path, "canary_registry": {str(uuid.uuid4())}}
+        )
