@@ -51,7 +51,7 @@ from typing import Any
 
 from qfbench2_common.contracts import OrganizerFault
 from qfbench2_common.failure_labels import FailureLabel
-from qfbench2_common.leakage import scan_canary
+from qfbench2_common.leakage import scan_tree
 from qfbench2_common.manifest import verify_manifest
 from qfbench2_common.scoring.passk import pass_at_k, suite_summary  # noqa: F401 (re-exported)
 from qfbench2_common.scoring.bootstrap import bootstrap_ci  # noqa: F401 (re-exported)
@@ -199,21 +199,38 @@ def _g2_cutoff_resource(ctx: dict[str, Any]) -> GateResult:
             detail={"elapsed_sec": elapsed, "timeout_sec": timeout},
         )
 
-    # Canary scan: search all text output for known GUIDs.
+    # Canary scan: every regular file under the output tree, at any depth.
+    #
+    # This used to walk the tree itself, read only files whose suffix was in a six-entry allowlist
+    # (.py .json .txt .md .csv .log), and call the withdrawn `scan_canary` per file. Two defects in
+    # one loop: `scan_canary` is a raising stub under frozen ruling R-8, so the gate CRASHED the
+    # moment a registry was supplied; and the extension allowlist meant a contaminated agent that
+    # wrote its memory to any other name was never scanned at all.
+    #
+    # `scan_tree` reads every regular file regardless of name or extension, matches byte-wise and
+    # case-folded so a canary is found in binary output as readily as in text, and raises
+    # `LeakageScanIncomplete` (an OrganizerFault) rather than reporting `clean` when it cannot
+    # finish -- a scan that could not complete must never look like a scan that found nothing.
+    #
+    # It returns a verdict carrying a COUNT of distinct registry entries observed, never the
+    # matched GUIDs themselves, so a hit cannot tell an adversary which canary they tripped.
     output_dir = pathlib.Path(ctx.get("output_dir", "/output"))
     registry: set[str] = ctx.get("canary_registry", set())
     if registry:
-        text_exts = {".py", ".json", ".txt", ".md", ".csv", ".log"}
-        hits: list[str] = []
-        for out_file in output_dir.rglob("*"):
-            if out_file.is_file() and out_file.suffix in text_exts:
-                content = out_file.read_text(errors="replace")
-                hits.extend(scan_canary(content, registry))
-        if hits:
+        verdict = scan_tree(output_dir, registry)
+        if verdict.canary_verdict == "hit":
+            # COUNT only, never the matched GUIDs. The old detail returned the canaries that were
+            # hit, which hands a contaminated submitter the exact strings to strip on the next
+            # attempt -- and the registry is private material besides. `hit_count` is the number of
+            # DISTINCT registry entries observed, so repeating one canary a thousand times cannot
+            # be made to read differently from writing it once.
             return GateResult(
                 passed=False,
                 label=FailureLabel.CONTAMINATION_CANARY,
-                detail={"canary_guids_found": hits},
+                detail={
+                    "canary_hit_count": verdict.hit_count,
+                    "scanned_file_count": verdict.scanned_file_count,
+                },
             )
 
     return GateResult(passed=True)
