@@ -62,8 +62,12 @@ These live in the **sealed private repo** and are never visible to participants:
 git clone https://github.com/Agenthon-2026/track1-coding-public.git
 cd track1-coding-public
 
-# Install the shared scoring toolkit (inherits from the main repo)
-pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.3.1#subdirectory=common"
+# Install the shared scoring toolkit (inherits from the main repo).
+# Pin the tag, and pin this one: v2.3.1 rejects a descriptor the evaluation verifier accepts
+# (it requires at least one `models` entry; the current contract allows `"models": []`).
+# `pip show qfbench2-common` reports 2.3.1 from this tag -- the package metadata lags the tag.
+# That is cosmetic and expected; the code is the v2.4.0 code.
+pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.4.0#subdirectory=common"
 
 # Make THIS repo's track package importable. `qfbench2 smoke --track coding` loads
 # qfbench2_track_coding, which lives here and is not part of the toolkit; without this the
@@ -254,7 +258,7 @@ Full scoring code is in `qfbench2_track_coding/scoring.py`. It inherits all shar
 `qfbench2-common` toolkit. Install it with:
 
 ```bash
-pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.3.1#subdirectory=common"
+pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.4.0#subdirectory=common"
 ```
 
 ---
