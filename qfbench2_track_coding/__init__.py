@@ -19,3 +19,9 @@ from __future__ import annotations
 from .scoring import LEADERBOARD_SORT, build_verifier
 
 __all__ = ["build_verifier", "LEADERBOARD_SORT"]
+
+# The shared scorer version (see scoring.SCORER_VERSION). Re-exported so a
+# participant can read it without importing the scoring module.
+from .scoring import SCORER_VERSION, scorer_identity  # noqa: E402
+
+__version__ = SCORER_VERSION
