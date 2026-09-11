@@ -88,6 +88,10 @@ jobs:
         run: pip install -e . --no-deps
       - name: Scorer tests
         run: python -m pytest tests/test_scoring_bypass.py -q
+      # Named explicitly rather than left to a `tests/` glob, because this job runs one file by
+      # name: a new test that nothing invokes is a guard that reports green without executing.
+      - name: Shared scorer version (pyproject <-> SCORER_VERSION <-> package)
+        run: python -m pytest tests/test_scorer_version.py -q
 
   validate-units:
     name: Validate units (cards · canaries · manifests · public-safety)

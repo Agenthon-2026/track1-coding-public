@@ -16,6 +16,10 @@ The scoring primitive (pass@k) lives in the shared package:
 
 from __future__ import annotations
 
-from .scoring import LEADERBOARD_SORT, build_verifier
+from .scoring import LEADERBOARD_SORT, SCORER_VERSION, build_verifier, scorer_identity
 
-__all__ = ["build_verifier", "LEADERBOARD_SORT"]
+__all__ = ["build_verifier", "LEADERBOARD_SORT", "SCORER_VERSION", "scorer_identity"]
+
+# The shared scorer version (see scoring.SCORER_VERSION), so a participant can read it
+# without importing the scoring module.
+__version__ = SCORER_VERSION

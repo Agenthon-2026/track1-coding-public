@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "qfbench2-track-coding"
-version = "2.0.0"
+version = "3.1.0"
 description = "QFBench 2.0 Track-1 verifier/scorer wrapper: exposes qfbench2_track_coding.scoring.build_verifier(ctx) as required by the shared smoke runner (common/README.md contract). All scoring math lives in qfbench2-common."
 requires-python = ">=3.13"
 # The scoring path SHELLS OUT. `qfbench2_track_coding.scoring._run_trusted_checks` runs each
