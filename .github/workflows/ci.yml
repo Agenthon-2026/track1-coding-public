@@ -81,13 +81,13 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.3.1#subdirectory=common"
-          pip install "pytest>=8.2"
+          pip install "pytest>=8.2" "requests>=2.31"
       # --no-deps for the same reason every other job uses it: the toolkit is installed from the
       # tag above, not resolved from an index.
       - name: Install the track scoring package
         run: pip install -e . --no-deps
       - name: Scorer tests
-        run: python -m pytest tests/test_scoring_bypass.py -q
+        run: python -m pytest tests/test_scoring_bypass.py tests/test_iterative_baseline.py -q
 
   validate-units:
     name: Validate units (cards · canaries · manifests · public-safety)
