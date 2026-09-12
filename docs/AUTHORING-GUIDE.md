@@ -25,7 +25,7 @@ competition-wide GLOSSARY published with the shared toolkit:
 
 ## Prerequisites: install the tools
 
-Before you start, install the shared toolkit (pinned to the `v2.3.1` release) and build the
+Before you start, install the shared toolkit (pinned to the `v2.4.0` release) and build the
 shared sandbox base image:
 
 ```bash

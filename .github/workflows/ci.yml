@@ -54,7 +54,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install "ruff==0.4.7" "mypy==1.10.0"
-          pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.3.1#subdirectory=common"
+          pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.4.0#subdirectory=common"
       - name: Ruff lint
         run: ruff check qfbench2_track_coding
       - name: Ruff format check
@@ -80,7 +80,7 @@ jobs:
       - name: Install shared toolkit + test runner
         run: |
           python -m pip install --upgrade pip
-          pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.3.1#subdirectory=common"
+          pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.4.0#subdirectory=common"
           pip install "pytest>=8.2"
       # --no-deps for the same reason every other job uses it: the toolkit is installed from the
       # tag above, not resolved from an index.
@@ -88,6 +88,10 @@ jobs:
         run: pip install -e . --no-deps
       - name: Scorer tests
         run: python -m pytest tests/test_scoring_bypass.py -q
+      # Named explicitly rather than left to a `tests/` glob, because this job runs one file by
+      # name: a new test that nothing invokes is a guard that reports green without executing.
+      - name: Shared scorer version (pyproject <-> SCORER_VERSION <-> package)
+        run: python -m pytest tests/test_scorer_version.py -q
 
   validate-units:
     name: Validate units (cards · canaries · manifests · public-safety)
@@ -101,7 +105,7 @@ jobs:
       - name: Install shared toolkit
         run: |
           python -m pip install --upgrade pip
-          pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.3.1#subdirectory=common"
+          pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.4.0#subdirectory=common"
       # The CodaBench bundle and the shared smoke runner both resolve the scorer as
       # import_module("qfbench2_track_coding.scoring") — guard that contract here so a
       # rename or packaging change can never silently break official scoring again.
@@ -134,6 +138,6 @@ jobs:
       - name: Install shared toolkit (carries the dataset split)
         run: |
           python -m pip install --upgrade pip
-          pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.3.1#subdirectory=common"
+          pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.4.0#subdirectory=common"
       - name: Build both trees and gate on names + content
         run: python scripts/build_dev_dataset.py --out "${RUNNER_TEMP}/t1-dataset"
