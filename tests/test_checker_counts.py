@@ -1,0 +1,60 @@
+"""Count only the grader's run, not a participant-authored report."""
+
+import json
+
+import pytest
+
+from qfbench2_common.contracts import OrganizerFault
+from qfbench2_common.failure_labels import public_detail
+from qfbench2_track_coding.scoring import build_verifier
+
+
+def context(tmp_path, checks):
+    unit, out = tmp_path / "unit", tmp_path / "out"
+    (unit / "checks").mkdir(parents=True)
+    out.mkdir()
+    (unit / "card.toml").write_text('schema_version = "2.0"\n')
+    (unit / "manifest.json").write_text('{"files": []}')
+    (unit / "checks/test_outputs.py").write_text(
+        'import os, pathlib, pytest\n'
+        'OUTPUT_DIR = pathlib.Path(os.environ["OUTPUT_DIR"])\n' + checks
+    )
+    (out / "answer.txt").write_text("42")
+    return {"unit_dir": unit, "output_dir": out, "unit_handle": "u-synthetic"}
+
+
+def test_partial_tests_do_not_pass_the_task(tmp_path):
+    ctx = context(tmp_path,
+        'def test_good():\n    assert (OUTPUT_DIR / "answer.txt").read_text() == "42"\n'
+        'def test_wrong():\n    assert False\n')
+    sink = tmp_path / "operator"
+    ctx["operator_sink"] = sink
+    (ctx["output_dir"] / "pytest_report.json").write_text(
+        '{"summary": {"passed": 999, "total": 999}}'
+    )
+    verdict = build_verifier(ctx).run(ctx)
+    assert not verdict.admissible
+    counts = json.loads((sink / "track1_checker_counts.jsonl").read_text())
+    assert counts == {"unit_handle": "u-synthetic", "task_passed": False,
+                      "checks_run": 2, "checks_passed": 1, "checks_failed": 1,
+                      "checks_errored": 0, "checks_skipped": 0}
+    assert "checks_passed" not in public_detail(counts)
+
+
+def test_all_passed_and_skipped_are_counted_separately(tmp_path):
+    ctx = context(tmp_path,
+        'def test_good():\n    assert (OUTPUT_DIR / "answer.txt").read_text() == "42"\n'
+        '@pytest.mark.skip(reason="synthetic")\ndef test_skip():\n    pass\n')
+    ctx["operator_sink"] = tmp_path / "operator"
+    verdict = build_verifier(ctx).run(ctx)
+    assert verdict.admissible and verdict.score == 1.0
+    counts = json.loads((ctx["operator_sink"] / "track1_checker_counts.jsonl").read_text())
+    assert counts["checks_run"] == counts["checks_passed"] == 1
+    assert counts["checks_skipped"] == 1
+
+
+@pytest.mark.parametrize("checks", ["", '@pytest.mark.skip\ndef test_skip():\n    pass\n'])
+def test_no_passing_tests_is_an_organizer_fault(tmp_path, checks):
+    ctx = context(tmp_path, checks)
+    with pytest.raises(OrganizerFault, match="passed no tests"):
+        build_verifier(ctx).run(ctx)

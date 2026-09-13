@@ -41,12 +41,19 @@ Usage
 
 from __future__ import annotations
 
+import ast
+import contextlib
 import json
 import sys
 import subprocess
 import os
 import pathlib
 import re
+import tempfile
+import xml.etree.ElementTree as ET
+import shutil
+import stat
+from collections.abc import Iterator
 from typing import Any
 
 from qfbench2_common.contracts import OrganizerFault
@@ -335,6 +342,317 @@ _RUNNER_PROBE_TIMEOUT_SEC = 120.0
 #: interrupted by a bad deliverable, and guessing "organizer" there would hand out free passes.
 _HARNESS_FAULT_EXIT_CODES = frozenset({3, 4})
 
+#: The container paths the harness binds to the run's output directory, in the order they are
+#: tried. Keep in sync with `tests/test_output_dir_contract.py::BOUND_OUTPUT_PATHS` and
+#: SUBMISSION_CLI.md invariant 8. A unit's checks may name either statically; the scorer presents
+#: the submission's output there for the duration of that unit's checks (see
+#: `_present_output_at`). On the platform the first one already exists, empty, when the scorer
+#: starts: it is the scoring container's own output root, bound there by the worker. Module-level
+#: so tests can point it at a temporary tree -- creating a real `/app/output` needs root, which
+#: CI does not have.
+_PRESENTABLE_OUTPUT_PATHS: tuple[str, ...] = ("/app/output", "/output")
+
+#: Does `checks/test_outputs.py` resolve its output path from the environment? Both operand orders
+#: are real: `pathlib.Path(os.environ.get("OUTPUT_DIR") or "/app/output")` puts OUTPUT_DIR after
+#: `environ`, `d = os.environ.get("OUTPUT_DIR", "/app/output")` puts it after too -- but the first
+#: form the scorer shipped with, `OUTPUT_DIR[^\n]*(environ|getenv)`, matched only a name-first
+#: line (`OUTPUT_DIR = os.environ[...]`) and classified a value-first line as hardcoded. Both
+#: spellings exist in authored units; both are redirectable.
+_REDIRECTABLE_RE = re.compile(
+    r"(?:environ|getenv)[^\n]*OUTPUT_DIR|OUTPUT_DIR[^\n]*(?:environ|getenv)"
+)
+
+
+def _static_output_paths(source: str) -> list[str]:
+    """The bound container paths a checks file names literally, in `_PRESENTABLE_OUTPUT_PATHS`
+    order. The lookbehind is load-bearing (it is the one `tests/test_output_dir_contract.py`
+    documents): without it `/output` matches INSIDE `/app/output` and a relative `./output`."""
+    found: list[str] = []
+    for path in _PRESENTABLE_OUTPUT_PATHS:
+        if re.search(rf"(?<![.\w]){re.escape(path)}(?![A-Za-z0-9_-])", source):
+            found.append(path)
+    return found
+
+
+#: The one thing `_present_output_at` assumes about a unit's checks: they READ the submission's
+#: output, they do not EXECUTE it. A checks process that runs participant code (imports a module
+#: from the output, adds it to `sys.path`, runs it in a subprocess, `exec`s its text) hands that
+#: code the presentation directory itself, and from there the "restored -> not restored"
+#: distinction below stops being organizer-only. Measured 2026-09-10: 0 of 87 public and 0 of
+#: 29 sealed checks files do; the 11 `sys.path` users point at `__file__`-relative helpers and
+#: the 2 `subprocess` users run the organizer's own `solution/solve.sh`. The roster tests
+#: (`tests/test_scoring_bypass.py::TestTheClassifierOverTheRoster`) and the private census tool
+#: keep it at 0 by refusing the shapes `_calls_executing_from_output` recognises. The name test
+#: is by the CALL's dotted name; the location test is over the WHOLE call, so a multi-line
+#: `subprocess.run([\n ..., str(OUTPUT_DIR / "solve.py")])` is seen. A path stored in a variable
+#: first is not: this is a roster-hygiene guard for authored files, not a sandbox.
+_EXECUTION_CALL_RE = re.compile(
+    r"^(?:[\w.]+\.)?(?:sys\.path\.\w+|subprocess\.\w+|Popen|importlib(?:\.\w+)+|runpy\.\w+"
+    r"|exec|eval|__import__|os\.(?:system|popen|exec\w*|spawn\w*|posix_spawn\w*))$"
+)
+_OUTPUT_LOCATION_RE = re.compile(
+    r"OUTPUT_DIR|output_dir|(?<![.\w])/app/output|(?<![.\w])/output(?![A-Za-z0-9_-])"
+)
+
+
+def _calls_executing_from_output(source: str) -> list[int]:
+    """Line numbers of calls in `source` that hand the output location to an execution
+    facility. Empty for a checks file that only reads its output. A file that does not parse
+    raises `SyntaxError`: pytest could not collect it either, so it is a roster defect too."""
+    hits: list[int] = []
+    for node in ast.walk(ast.parse(source)):
+        if not isinstance(node, ast.Call):
+            continue
+        if not _EXECUTION_CALL_RE.match(ast.unparse(node.func)):
+            continue
+        segment = ast.get_source_segment(source, node) or ""
+        if _OUTPUT_LOCATION_RE.search(segment):
+            hits.append(node.lineno)
+    return hits
+
+
+class _UnpresentableOutput(Exception):
+    """The submission's output tree cannot be presented by copy for a reason that is the tree's
+    own: a special file (a FIFO would block the copy forever; a device node could feed it
+    without end), an entry the scorer cannot read, or no tree at all. Participant material:
+    `_run_trusted_checks` turns it into a non-"ran" verdict, never an `OrganizerFault`."""
+
+
+def _scan_presentable(output_dir: pathlib.Path) -> str | None:
+    """Why `output_dir` cannot be copied, or ``None`` when every entry is a regular file, a
+    directory or a symlink (kept as a symlink, never followed) that this process can read."""
+    if not output_dir.is_dir():
+        return "the output directory does not exist"
+    for root, dirs, files in os.walk(output_dir, followlinks=False):
+        for name in dirs + files:
+            entry = pathlib.Path(root) / name
+            shown = entry.relative_to(output_dir)
+            try:
+                mode = os.lstat(entry).st_mode
+            except OSError as exc:
+                return f"{shown} cannot be inspected: {exc.strerror}"
+            if stat.S_ISLNK(mode):
+                continue
+            if not (stat.S_ISREG(mode) or stat.S_ISDIR(mode)):
+                return f"{shown} is not a regular file, a directory or a symlink"
+            if not os.access(entry, os.R_OK):
+                return f"{shown} is not readable"
+    return None
+
+
+def _claim_presentation_dir(
+    target: pathlib.Path, raw: str, made_parents: list[pathlib.Path]
+) -> bool:
+    """Take `target` for the presentation. ``True`` when this scorer created it, ``False`` when
+    it found an EMPTY directory there (the platform: CodaBench binds the scoring program's own,
+    still-empty output root at `/app/output`). Anything else -- a symlink, a file, a directory
+    with content, a parent that cannot be made -- is organizer material, raised as
+    `OrganizerFault` and left exactly as found."""
+    if target.is_symlink():
+        raise OrganizerFault(
+            f"the Track 1 scorer needs to present the submission's output at {raw}, but that "
+            "path is a symlink this scorer did not make. Left untouched. Organizer-side "
+            "environment fault, never a submission error."
+        )
+    if target.exists():
+        if not target.is_dir():
+            raise OrganizerFault(
+                f"the Track 1 scorer needs to present the submission's output at {raw}, but "
+                "that path is a file, not a directory. Left untouched. Organizer-side "
+                "environment fault, never a submission error."
+            )
+        try:
+            occupied = any(target.iterdir())
+        except OSError as exc:
+            raise OrganizerFault(
+                f"the Track 1 scorer cannot list {raw} to present the submission's output "
+                f"there: {exc}. Organizer-side environment fault, never a submission error."
+            ) from exc
+        if occupied:
+            raise OrganizerFault(
+                f"the Track 1 scorer needs to present the submission's output at {raw}, but "
+                "that directory already has content that is not this scorer's. Left "
+                "untouched: an empty directory there is expected (the platform binds the "
+                "scoring output root at /app/output before the scorer starts), a populated "
+                "one is not. Organizer-side environment fault, never a submission error."
+            )
+        return False
+    parent = target.parent
+    if not parent.is_dir():
+        try:
+            parent.mkdir(parents=True)
+        except OSError as exc:
+            raise OrganizerFault(
+                f"the Track 1 scorer could not create {parent} to present the submission's "
+                f"output at {raw}: {exc}. Organizer-side environment fault."
+            ) from exc
+        made_parents.append(parent)
+    try:
+        target.mkdir()
+    except OSError as exc:
+        raise OrganizerFault(
+            f"the Track 1 scorer could not create {raw} to present the submission's output: "
+            f"{exc}. Organizer-side environment fault."
+        ) from exc
+    return True
+
+
+def _make_tree_removable(root: pathlib.Path) -> None:
+    """Give the owner write and search on `root` and every directory below it, so that a
+    read-only subdirectory does not stop the restoration: `shutil.copytree` copies modes, so a
+    `0500` directory in the submission's output arrives as a `0500` directory in the
+    presentation, and a check may leave one too. A file's mode does not gate its unlinking,
+    so files are left alone. Directories only, by `lstat`: a symlink to a directory (kept as a
+    symlink by the copy) is never followed, so nothing outside the tree is ever chmod'ed.
+    Topdown, and the children of each directory before the walk descends into them, so a
+    directory that cannot be listed yet (`0000`) is opened before `os.walk` tries."""
+
+    def widen(path: pathlib.Path) -> None:
+        mode = os.lstat(path).st_mode
+        if stat.S_ISDIR(mode) and not stat.S_ISLNK(mode):
+            wanted = stat.S_IMODE(mode) | stat.S_IRWXU
+            if wanted != stat.S_IMODE(mode):
+                os.chmod(path, wanted)
+
+    widen(root)
+    for dirpath, dirnames, _files in os.walk(root, followlinks=False):
+        for name in dirnames:
+            widen(pathlib.Path(dirpath) / name)
+
+
+def _restore_presentation_dir(
+    target: pathlib.Path, raw: str, created: bool
+) -> str | None:
+    """Put `target` back the way `_claim_presentation_dir` found it: absent if this scorer made
+    it, an empty directory otherwise. Everything inside goes -- what was copied in and anything
+    the checks wrote next to it; on the platform the worker refuses an output root that already
+    holds a `metadata` file, and nothing a check leaves there is part of the verdict. A
+    read-only subdirectory in there (copied from the output tree, or left by a check) is opened
+    first (`_make_tree_removable`); left as found, it would fail the removal, and a populated
+    root fails the NEXT hardcoded unit as an organizer fault. Returns a description, leaving
+    the path alone, when it is no longer the directory that was populated (a symlink or a file
+    now stands there: not ours to remove)."""
+    try:
+        if target.is_symlink() or (target.exists() and not target.is_dir()):
+            return f"{raw} is no longer the directory this scorer populated"
+        if target.is_dir():
+            _make_tree_removable(target)
+            for entry in list(target.iterdir()):
+                if entry.is_symlink() or not entry.is_dir():
+                    entry.unlink()
+                else:
+                    shutil.rmtree(entry)
+            if created:
+                target.rmdir()
+        elif not created:
+            # The checks removed the empty directory the scorer was given (possible only off
+            # the platform: a bind mount cannot be removed). Restore what was found.
+            target.mkdir()
+    except OSError as exc:
+        return f"{raw} could not be restored: {exc}"
+    return None
+
+
+def _copy_failure_summary(exc: OSError) -> str:
+    """`exc` without the paths it carries. `str(exc)` names the SOURCE of what failed, and
+    the source is the run's output directory -- on the platform `res/<unit>`, whose last
+    component is the unit's handle. An `OrganizerFault` message goes to the scoring log,
+    which is not the place for a sealed unit's handle. `shutil.Error` is the collected form
+    (one ``(src, dst, why)`` triple per failed entry, each `why` a `str(OSError)` with paths):
+    reduced to the count. A bare `OSError` keeps errno and strerror (the C library's text,
+    never a path); anything without them is named by type only."""
+    if isinstance(exc, shutil.Error):
+        failed = exc.args[0] if exc.args and isinstance(exc.args[0], list) else []
+        return (
+            f"shutil.Error: {len(failed)} of the output's entries could not be copied"
+        )
+    if exc.errno is not None and exc.strerror:
+        return f"{type(exc).__name__}: [Errno {exc.errno}] {exc.strerror}"
+    return type(exc).__name__
+
+
+@contextlib.contextmanager
+def _present_output_at(
+    paths: list[str], output_dir: pathlib.Path
+) -> Iterator[list[str]]:
+    """Make the contents of `output_dir` visible at each of `paths` while the block runs.
+
+    Why: on the platform `score.py` scores every unit with `output_dir = res/<unit>`, never
+    `/app/output`, and 48 of the 87 Development units' checks hardcode `/app/output` (measured
+    2026-09-10). Until this existed the scorer refused those units as ``not_redirectable`` and
+    `_g3_domain_semantics` filed the refusal as the PARTICIPANT's `T1_WRONG_NUMERIC`, so on 48
+    units a correct solution was labelled exactly like a placeholder, for every team.
+
+    How: a COPY of the output tree into the named directory, which the scorer either creates
+    (and removes afterwards) or finds already there and EMPTY (and empties afterwards). The
+    second case is the platform's, not an edge case: the vendored CodaBench worker binds the
+    scoring program's own output directory at `/app/output` for every scoring container
+    (`compute_worker.py`, `volumes_config[...] = {"bind": "/app/output"}`), that directory is
+    a fresh, empty one for every run, and `score.py` writes nothing into it until the unit loop
+    has finished. The first version of this function refused any pre-existing path, which on
+    the platform turned "48 units scored as participant zero" into "the whole evaluation
+    aborted as an organizer fault, nothing scored" -- caught in review before it shipped, never
+    deployed. A symlink cannot do the platform case at all (a bind mount cannot be replaced),
+    per-entry symlinks would hide subdirectories from `os.walk` and `Path.rglob` (one public
+    unit rglobs its output), and a bind mount needs privileges the container may not have.
+
+    Precondition, held by the roster tests, not by this code: the checks READ the output, they
+    never execute it (see `_EXECUTION_CALL_RE`). Given that, everything below the copy is
+    organizer material and raises `OrganizerFault`, which scores nobody: a path that is a
+    symlink, a file or a populated directory (never touched -- it could be a real mount), a
+    parent or directory that cannot be created, a copy that fails on a tree already checked to
+    be copyable, or a path that is no longer the directory this scorer populated when the
+    checks finish (left in place). What IS the submission's -- an output tree that cannot be
+    copied because of what it contains -- raises `_UnpresentableOutput` before anything is
+    touched, and `_run_trusted_checks` files that with the submission.
+
+    Known window, documented rather than closed: a process a unit's checks leave running past
+    pytest's exit can read the NEXT unit's presentation through the same path. Same submission,
+    organizer-owned checks; the precondition above is what keeps it that way. A leftover
+    process that WRITES into the bound path after the restoration makes the NEXT hardcoded
+    unit an `OrganizerFault` (`_claim_presentation_dir` finds the root populated), which is
+    the intended loud failure: nothing is scored against a presentation that is not the
+    scorer's own.
+    """
+    if paths:
+        reason = _scan_presentable(output_dir)
+        if reason is not None:
+            raise _UnpresentableOutput(reason)
+    placed: list[tuple[pathlib.Path, str, bool]] = []
+    made_parents: list[pathlib.Path] = []
+    try:
+        for raw in paths:
+            target = pathlib.Path(raw)
+            created = _claim_presentation_dir(target, raw, made_parents)
+            placed.append((target, raw, created))
+            try:
+                shutil.copytree(output_dir, target, symlinks=True, dirs_exist_ok=True)
+            except OSError as exc:  # shutil.Error is an OSError
+                raise OrganizerFault(
+                    f"the Track 1 scorer could not copy the submission's output to {raw} "
+                    f"({_copy_failure_summary(exc)}). The output tree was checked to be "
+                    "copyable first, so this is the scoring environment's (space, "
+                    "permissions). Organizer-side fault. The failure's own text is not "
+                    "repeated here: it names the run's output directory."
+                ) from exc
+        yield list(paths)
+    finally:
+        not_restored: list[str] = []
+        for target, raw, created in reversed(placed):
+            problem = _restore_presentation_dir(target, raw, created)
+            if problem is not None:
+                not_restored.append(problem)
+        for parent in reversed(made_parents):
+            with contextlib.suppress(OSError):
+                parent.rmdir()
+        if not_restored:
+            raise OrganizerFault(
+                "the Track 1 scorer's presentation of the submission's output was replaced "
+                f"while the unit's checks ran ({'; '.join(not_restored)}); it was left in "
+                "place and the checks' verdict cannot be trusted. Organizer-side environment "
+                "fault."
+            )
+
 
 def _require_test_runner() -> None:
     """Refuse to score at all when the SCORER's own interpreter cannot import pytest.
@@ -381,23 +699,57 @@ def _require_test_runner() -> None:
         )
 
 
+_INPUT_PATHS = {"/input": "", "/app/data": "environment/data"}
+
+
+@contextlib.contextmanager
+def _present_inputs(unit_dir: pathlib.Path, source: str) -> Iterator[None]:
+    """Provide only the selected unit's inputs at the paths its checker names."""
+    with contextlib.ExitStack() as stack:
+        try:
+            for target, relative in _INPUT_PATHS.items():
+                if not re.search(r"[\"']" + re.escape(target) + r"(?:/|[\"'])", source):
+                    continue
+                data = unit_dir / relative
+                if not data.is_dir():
+                    raise OrganizerFault(
+                        "the checker requires an absent organizer input directory"
+                    )
+                if data.resolve() != pathlib.Path(target).resolve():
+                    stack.enter_context(_present_output_at([target], data))
+        except _UnpresentableOutput as exc:
+            raise OrganizerFault(
+                "the organizer input tree cannot be presented to its checker"
+            ) from exc
+        yield
+
+
 def _run_trusted_checks(
     unit_dir: pathlib.Path, output_dir: pathlib.Path, timeout_sec: float = 900.0
 ) -> tuple[bool, dict[str, Any]]:
     """Run the unit's grader-owned checks against the submission's output.
 
-    Returns ``(passed, detail)``. **A run that cannot happen is not a pass.** If the checks are
-    absent, unreadable, error out or time out, this returns ``False`` with a reason — a correctness
-    gate that cannot execute must fail closed, never report green (global rule 7).
+    Returns ``(passed, detail)``. **A run that cannot happen is not a pass.** If the checks time
+    out, this returns ``False`` with a reason — a correctness gate that cannot execute must fail
+    closed, never report green (global rule 7).
 
-    Failing closed is right only when the fault could be the submission's. When the fault is
-    provably ours — no test runner in the scoring environment, or pytest exiting on its own
-    internal/usage error — a ``False`` here would be charged to the participant as
-    ``T1_WRONG_NUMERIC``. Those two cases raise `OrganizerFault` instead, which scores nobody.
+    Failing closed is right only when the fault could be the submission's (a check that never
+    finishes may be reading a pathological deliverable). When the fault is provably ours — the
+    checks file is absent from the unit, it cannot be pointed at this output directory, the
+    scorer cannot launch its own interpreter, no test runner in the scoring environment, or
+    pytest exiting on its own internal/usage error — a ``False`` here would be charged to the
+    participant as ``T1_WRONG_NUMERIC``. Every one of those raises `OrganizerFault` instead,
+    which scores nobody.
+
+    Returns ``False`` with ``trusted_checks="unpresentable_output"`` when the checks name the
+    path statically and the output tree itself cannot be copied there (a special file, an
+    unreadable entry): that is the submission's tree, so it stays with the submission.
 
     Raises:
-        OrganizerFault: the scoring environment has no importable pytest, or pytest exited with
-            an internal (3) or usage (4) error without judging the submission.
+        OrganizerFault: the unit ships no checks file; the checks resolve their path statically
+            and the scorer cannot present the output there (see `_present_output_at`); the
+            scoring environment has no importable pytest or cannot launch it; or pytest exited
+            with an internal (3) or usage (4) error without judging the submission.
     """
     # Resolved before anything uses them. The subprocess below runs with `cwd=unit_dir`, so a
     # RELATIVE `unit_dir` -- which is exactly what the README's own command produces
@@ -411,30 +763,41 @@ def _run_trusted_checks(
 
     checks = unit_dir / "checks" / _CHECKS_ENTRY
     if not checks.is_file():
-        return False, {"trusted_checks": "absent", "path": str(checks)}
+        # The checks are the unit's sealed grader, shipped in the organizer's reference tree. A
+        # unit without them cannot judge anybody; until 2026-09-10 this returned
+        # `trusted_checks="absent"` and g3 filed it as the participant's T1_WRONG_NUMERIC.
+        # Deliberately no path in the message: a sealed unit id must not travel into an operator
+        # log on an abort path.
+        raise OrganizerFault(
+            "the Track 1 scorer found no grader-owned checks file "
+            f"(checks/{_CHECKS_ENTRY}) in the unit it was asked to score. A unit that ships no "
+            "checks is organizer material; this is never a submission error."
+        )
 
-    # Can these checks actually be pointed at THIS output directory?
+    # Can these checks be pointed at THIS output directory?
     #
-    # In production the checks run inside the unit's container, where the agent's output really is
-    # at the path they name, so a hardcoded `/app/output` is correct there. Run anywhere else, a
-    # hardcoded path means the checks read an empty or absent directory and fail for a reason that
-    # has nothing to do with the submission. Measured across the public units: 39 of 87 resolve
-    # OUTPUT_DIR from the environment and 48 do not.
-    #
-    # Reporting "failed" in that situation would be a lie in the safe direction, which is still a
-    # lie -- and it would make a correct submission look wrong. So this refuses to render a verdict
-    # it cannot support, and says which case it is.
+    # In the unit's own container the agent's output really is at the path the checks name, so
+    # a hardcoded `/app/output` is correct there. The platform scorer runs somewhere else: the
+    # hub's score.py scores every unit with `output_dir = res/<unit>`. Measured across the public
+    # Development units (2026-09-10): 39 of 87 resolve OUTPUT_DIR from the environment and 48
+    # hardcode `/app/output`. Until this date the scorer refused the 48 as `not_redirectable`
+    # and g3 charged the refusal to the participant, so on 48 units the verdict did not depend
+    # on the submission. Now the output is presented at the path the checks name for the
+    # duration of the run (`_present_output_at`); a checks file that reads neither OUTPUT_DIR
+    # nor any bound path is genuinely non-executable here, and that is an organizer fault.
     source = checks.read_text(errors="replace")
-    redirectable = bool(re.search(r"OUTPUT_DIR[^\n]*(environ|getenv)", source))
-    reads_here = pathlib.Path(str(output_dir)).resolve() == pathlib.Path("/app/output")
-    if not redirectable and not reads_here:
-        return False, {
-            "trusted_checks": "not_redirectable",
-            "detail": (
-                "this unit's checks resolve their output path statically, so they can only be "
-                "trusted inside the evaluation container where that path is the agent's output"
-            ),
-        }
+    redirectable = bool(_REDIRECTABLE_RE.search(source))
+    named = _static_output_paths(source)
+    present_at = (
+        [p for p in named if pathlib.Path(p) != output_dir] if not redirectable else []
+    )
+    if not redirectable and not named:
+        raise OrganizerFault(
+            "the Track 1 scorer cannot point this unit's checks at the submission's output: "
+            "they read neither OUTPUT_DIR from the environment nor any path the harness binds "
+            f"({', '.join(_PRESENTABLE_OUTPUT_PATHS)}). The unit's checks are organizer "
+            "material; this is never a submission error."
+        )
 
     # Before anything is read as a verdict: can the runner run at all? A scoring environment
     # without pytest cannot judge this submission, and must say so as an organizer fault rather
@@ -443,27 +806,63 @@ def _run_trusted_checks(
 
     env = {**os.environ, "OUTPUT_DIR": str(output_dir), "PYTHONDONTWRITEBYTECODE": "1"}
     try:
-        proc = subprocess.run(  # noqa: S603 - fixed argv, no shell
-            [
-                sys.executable,
-                "-m",
-                "pytest",
-                str(checks),
-                "-q",
-                "--no-header",
-                "-p",
-                "no:cacheprovider",
-            ],
-            capture_output=True,
-            text=True,
-            timeout=timeout_sec,
-            env=env,
-            cwd=str(unit_dir),
-        )
+        with _present_inputs(unit_dir, source), tempfile.TemporaryDirectory(
+            prefix="t1-checks-"
+        ) as scratch, _present_output_at(present_at, output_dir):
+            report_path = pathlib.Path(scratch) / "junit.xml"
+            proc = subprocess.run(  # noqa: S603 - fixed argv, no shell
+                [
+                    sys.executable,
+                    "-m",
+                    "pytest",
+                    str(checks),
+                    "-q",
+                    "--no-header",
+                    "-p",
+                    "no:cacheprovider",
+                    f"--junitxml={report_path}",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=timeout_sec,
+                env=env,
+                cwd=str(unit_dir),
+            )
+            counts: dict[str, int] = {}
+            if proc.returncode not in _HARNESS_FAULT_EXIT_CODES:
+                try:
+                    cases = list(ET.parse(report_path).iter("testcase"))
+                except (OSError, ET.ParseError) as exc:
+                    raise OrganizerFault(
+                        "the checker produced no readable test-count report"
+                    ) from exc
+                failed = sum(case.find("failure") is not None for case in cases)
+                errored = sum(case.find("error") is not None for case in cases)
+                skipped = sum(case.find("skipped") is not None for case in cases)
+                counts = {
+                    "checks_run": len(cases) - skipped,
+                    "checks_passed": len(cases) - failed - errored - skipped,
+                    "checks_failed": failed,
+                    "checks_errored": errored,
+                    "checks_skipped": skipped,
+                }
+    except _UnpresentableOutput as exc:
+        # Nothing was presented and nothing ran: the tree the submission wrote cannot be copied
+        # to the path its unit's checks read. Its content, its failure.
+        return False, {
+            "trusted_checks": "unpresentable_output",
+            "reason": str(exc),
+            "output_presented_at": [],
+        }
     except subprocess.TimeoutExpired:
         return False, {"trusted_checks": "timeout", "timeout_sec": timeout_sec}
     except OSError as exc:
-        return False, {"trusted_checks": "could_not_run", "error": str(exc)}
+        # The scorer's own interpreter could not be launched. `_require_test_runner` already
+        # treats that as ours; a launch that succeeded once and fails now is no less ours.
+        raise OrganizerFault(
+            f"the Track 1 scorer could not launch its test runner with {sys.executable}: {exc}. "
+            "Organizer-side environment fault, never a submission error."
+        ) from exc
     if proc.returncode in _HARNESS_FAULT_EXIT_CODES:
         # pytest reached an internal or usage error: it never judged the submission. Deliberately
         # no unit path and no captured output in the message -- a sealed unit id must not travel
@@ -474,9 +873,15 @@ def _run_trusted_checks(
             "organizer-side harness fault, never a submission error"
         )
     # pytest: 0 = all passed. 5 = no tests collected, which is not evidence of correctness.
+    if proc.returncode == 5 or (proc.returncode == 0 and counts["checks_passed"] == 0):
+        raise OrganizerFault(
+            "the checker passed no tests; it cannot certify this submission"
+        )
     return proc.returncode == 0, {
         "trusted_checks": "ran",
         "pytest_returncode": proc.returncode,
+        **counts,
+        "output_presented_at": present_at,
         "tail": (proc.stdout or proc.stderr or "")[-400:],
     }
 
@@ -546,15 +951,43 @@ def _g3_domain_semantics(ctx: dict[str, Any]) -> GateResult:
     # deliverables, which is what `test.sh` was always meant to do and what nothing here did.
     unit_dir = pathlib.Path(ctx.get("unit_dir", "."))
     trusted_ok, trusted = _run_trusted_checks(unit_dir, output_dir)
+    if ctx.get("operator_sink") is not None:
+        sink = pathlib.Path(ctx["operator_sink"])
+        record = {
+            "unit_handle": ctx.get("unit_handle", "local-preview"),
+            "task_passed": trusted_ok,
+            **{
+                key: value
+                for key, value in trusted.items()
+                if key.startswith("checks_")
+            },
+        }
+        try:
+            sink.mkdir(parents=True, exist_ok=True)
+            with (sink / "track1_checker_counts.jsonl").open(
+                "a", encoding="utf-8"
+            ) as output:
+                output.write(json.dumps(record, allow_nan=False, sort_keys=True) + "\n")
+        except OSError as exc:
+            raise OrganizerFault(
+                "the operator checker-count log is not writable"
+            ) from exc
 
     if not trusted_ok and trusted.get("trusted_checks") != "ran":
-        # The checks could not be executed. That is not evidence of correctness and must not be
-        # scored as though it were (global rule 7: a gate that cannot run fails, never passes).
+        # The checks reached no verdict for a reason that is the submission's: they started but
+        # did not finish (a timeout), or the output tree could not be presented at the path they
+        # read (`unpresentable_output`: a special file or an unreadable entry in what the
+        # submission wrote). Everything that could not execute for OUR reasons raises
+        # OrganizerFault in `_run_trusted_checks` and scores nobody. A check that never reaches
+        # a verdict is not evidence of correctness and must not be scored as though it were
+        # (global rule 7: a gate that cannot run fails, never passes). It stays with the
+        # submission because a pathological deliverable can make a grader hang, and waving that
+        # through would be a free pass.
         return GateResult(
             passed=False,
             label=FailureLabel.T1_WRONG_NUMERIC,
             detail={
-                "error": "trusted checks did not execute",
+                "error": "trusted checks reached no verdict",
                 "claimed_reward": reward,
                 **trusted,
             },

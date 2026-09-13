@@ -28,8 +28,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - name: No held-out material (hash roster, three arms)
-        run: python .github/check_heldout_roster.py
+      - name: Public confidentiality classes (organizer review is separate)
+        run: python .github/check_public_confidentiality.py
+      - name: Public confidentiality regression tests
+        run: python tests/test_public_confidentiality.py
       # Pin where deliverables go. This repo needs the harness to bind the run output directory
       # at BOTH /app/output and /output; the test enumerates, from the unit data, which units
       # require each. Stdlib-only and unit-data-only, so it needs no toolkit install.
@@ -87,11 +89,18 @@ jobs:
       - name: Install the track scoring package
         run: pip install -e . --no-deps
       - name: Scorer tests
-        run: python -m pytest tests/test_scoring_bypass.py -q
+        run: python -m pytest tests/test_scoring_bypass.py tests/test_g2_canary_scan.py tests/test_checker_counts.py tests/test_checker_inputs.py -q
       # Named explicitly rather than left to a `tests/` glob, because this job runs one file by
       # name: a new test that nothing invokes is a guard that reports green without executing.
       - name: Shared scorer version (pyproject <-> SCORER_VERSION <-> package)
         run: python -m pytest tests/test_scorer_version.py -q
+      - name: Actual exemplar through qfbench2 in an isolated Linux container
+        run: |
+          docker run --rm -e T1_CONTAINER_TEST=1 -e PYTHONDONTWRITEBYTECODE=1 \
+            -v "$PWD:/repo" -w /repo python:3.13-slim sh -ec '
+              pip install "qfbench2-common @ https://github.com/Agenthon-2026/Agenthon2026-public/archive/refs/tags/v2.4.0.tar.gz#subdirectory=common" /repo
+              python -m pytest tests/test_exemplar_agent.py -p no:cacheprovider -q
+            '
 
   validate-units:
     name: Validate units (cards · canaries · manifests · public-safety)

@@ -99,17 +99,19 @@ docker build -t finance-bench-sandbox:latest -f docker/sandbox.Dockerfile .
 ### 4. Understand the local verification steps
 
 `qfbench2 smoke <unit_dir> <output_dir> --track coding` verifies deliverables that already
-exist. It does not build or execute an agent image, and there is no bundled mock agent.
-First build your own agent, then follow step 6 to run it and check its output in the sandbox.
-The checker needs the unit at `/input` and the output mounted at both `/app/output` and
+exist. It does not run an agent, generate answers, or build an agent image. To try this one
+public exemplar without first implementing your own solver, explicitly run the
+[deterministic interface example](examples/exemplar_agent/README.md) before invoking smoke.
+It is not an official baseline and does not solve the other tasks. For your own agent, follow
+step 6 to run it and then check its output in the sandbox.
+The step 6 checker needs the unit at `/input` and the output mounted at both `/app/output` and
 `/output`; a host output directory alone does not provide that layout.
 
-Harbor is a separate, optional execution path. With Harbor and your chosen agent installed:
+Harbor is a separate, optional execution path behind the toolkit. With Harbor and your chosen
+agent installed:
 
 ```bash
-harbor run --path units --task-name t1-EXAMPLE-bs-greeks-pde --agent <agent> --model <model>
-
-# Or launch through the toolkit adapter, then produce an offline development report:
+# Launch through the toolkit adapter, then produce an offline development report:
 qfbench2 track1 harbor-run --units-dir units --jobs-dir <dir> --job-name <name>
 qfbench2 track1 score-harbor-job --job-dir <dir>/<name> --units-dir units
 ```
@@ -165,6 +167,10 @@ The checker (`checks/test.sh`) runs **offline** and writes the reward signal its
 write the reward files yourself.
 
 ### 6. Run your agent, then check its output
+
+To try the exemplar before implementing your own solver, use the
+[executable example](examples/exemplar_agent/README.md). It is a deterministic interface
+example for one public practice task, not an official model baseline.
 
 Run this from the repository root after building the shared sandbox in step 3. Replace
 `your-agent:latest` with your image. Each run uses a fresh output directory.
@@ -248,6 +254,9 @@ Only an attempt that passes all four gates earns `score = 1.0`. The leaderboard 
 pass@1 over one execution per task with a fixed denominator (a wrong, crashed, timed-out or
 missing output stays in the denominator as zero); it publishes no confidence interval. The Harbor
 adapter's pass@3 with bootstrap CIs is an offline development report, not the official aggregate.
+
+The cards' `k_values = [1, 3]` is offline development metadata: any pass@3 figures in an offline
+report are not official leaderboard scores and do not change the signed single-pass plan.
 
 **There is no official baseline agent.** Track 1 ranks entries against each other on mean pass@1
 over the hidden `private-test` split; there is no reference score you must clear to be admitted.
