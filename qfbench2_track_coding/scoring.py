@@ -700,28 +700,269 @@ def _require_test_runner() -> None:
 
 
 _INPUT_PATHS = {"/input": "", "/app/data": "environment/data"}
+_IMAGE_INPUT_ROOT = "/app"
+_REFERENCE_INPUT_ROOT = "/tests/reference_data"
+
+
+def _checker_input_paths(source: str) -> set[str]:
+    """Literal organizer input paths only; never treat output/log paths as inputs."""
+    roots = (*_INPUT_PATHS, _REFERENCE_INPUT_ROOT, _IMAGE_INPUT_ROOT)
+    tree = ast.parse(source)
+    loaded = {
+        node.id
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)
+    }
+    ignored: set[int] = set()
+
+    def ignore(node: ast.AST | None) -> None:
+        if node is not None:
+            ignored.update(id(child) for child in ast.walk(node))
+
+    def inert_declaration(node: ast.AST | None) -> bool:
+        return (isinstance(node, ast.Constant) and isinstance(node.value, str)) or (
+            isinstance(node, ast.Call)
+            and ast.unparse(node.func) in ("Path", "pathlib.Path")
+            and not node.keywords
+            and all(
+                isinstance(arg, ast.Constant) and isinstance(arg.value, str)
+                for arg in node.args
+            )
+        )
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant):
+            ignore(node.value)  # A docstring or another inert string expression.
+        elif isinstance(node, ast.Assert) and isinstance(node.msg, ast.Constant):
+            ignore(node.msg)  # A literal failure message is not an input dependency.
+        elif isinstance(node, ast.Raise) and isinstance(node.exc, ast.Call):
+            for argument in node.exc.args:
+                if isinstance(argument, ast.Constant):
+                    ignore(argument)
+        elif isinstance(node, ast.Assign):
+            names = {
+                target.id for target in node.targets if isinstance(target, ast.Name)
+            }
+            if (
+                len(names) == len(node.targets)
+                and names.isdisjoint(loaded)
+                and inert_declaration(node.value)
+            ):
+                ignore(node.value)
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            if node.target.id not in loaded and inert_declaration(node.value):
+                ignore(node.value)
+        elif isinstance(node, ast.Call):
+            name = ast.unparse(node.func)
+            if name == "print" or name.startswith(("logging.", "logger.")):
+                for argument in node.args:
+                    if isinstance(argument, ast.Constant):
+                        ignore(argument)
+    interpolated_directories = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.JoinedStr) and id(node) not in ignored:
+            # Constant fragments are not filenames. Only the complete fixed directory
+            # before the first interpolation can be checked without evaluating Python.
+            prefix = ""
+            for piece in node.values:
+                if not isinstance(piece, ast.Constant) or not isinstance(
+                    piece.value, str
+                ):
+                    break
+                prefix += piece.value
+            if prefix.startswith("/"):
+                interpolated_directories.append(
+                    prefix.rpartition("/")[0]
+                    if any(
+                        isinstance(piece, ast.FormattedValue) for piece in node.values
+                    )
+                    else prefix
+                )
+            for piece in node.values:
+                if isinstance(piece, ast.Constant):
+                    ignore(piece)
+    values = interpolated_directories + [
+        node.value
+        for node in ast.walk(tree)
+        if id(node) not in ignored
+        and isinstance(node, ast.Constant)
+        and isinstance(node.value, str)
+    ]
+    paths = set()
+    for value in values:
+        value = value.rstrip("/")
+        if any(
+            value == p or value.startswith(p + "/")
+            for p in (*_PRESENTABLE_OUTPUT_PATHS, "/app/output", "/output")
+        ):
+            continue
+        if any(value == root or value.startswith(root + "/") for root in roots):
+            if ".." in pathlib.PurePosixPath(value).parts:
+                raise OrganizerFault("the checker names an unsafe organizer input path")
+            paths.add(value)
+    return paths
+
+
+def _input_presentations(
+    unit_dir: pathlib.Path, source: str
+) -> dict[str, pathlib.Path]:
+    """Resolve literal COPY data mappings without executing a Dockerfile or reading host inputs.
+
+    Only the selected organizer unit is a source. Unsupported/absent mappings fail before
+    pytest, including checkers that silently tolerate a missing reference directory.
+    """
+    named = _checker_input_paths(source)
+    mappings = {
+        target: unit_dir / relative for target, relative in _INPUT_PATHS.items()
+    }
+    mappings[_REFERENCE_INPUT_ROOT] = unit_dir / "checks/reference_data"
+    dockerfile = unit_dir / "environment/Dockerfile"
+    if dockerfile.is_file():
+        if (
+            dockerfile.is_symlink()
+            or (unit_dir / "environment").is_symlink()
+            or not dockerfile.resolve().is_relative_to(unit_dir.resolve())
+        ):
+            raise OrganizerFault(
+                "the organizer Dockerfile is outside its unit or symlinked"
+            )
+        mappings.pop(_IMAGE_INPUT_ROOT + "/data", None)
+        for line in dockerfile.read_text().splitlines():
+            # Restricted, literal, single-source COPY grammar used by the public units.
+            # JSON form, variables, flags, globs and multi-stage copies are not inferred.
+            match = re.fullmatch(
+                r"\s*COPY\s+(data(?:/[\w.\-/]*)?)\s+(/[^\s$*?\[\]]+)\s*", line
+            )
+            if not match:
+                continue
+            relative, destination = match.groups()
+            src = unit_dir / "environment" / relative
+            dest = pathlib.PurePosixPath(destination)
+            root = pathlib.PurePosixPath(_IMAGE_INPUT_ROOT)
+            if ".." in pathlib.PurePosixPath(relative).parts or ".." in dest.parts:
+                raise OrganizerFault("the unit's organizer input mapping is unsafe")
+            if not dest.is_relative_to(root):
+                continue
+            if src.is_dir():
+                # Never replace /app itself: the scorer lives there. Present its data
+                # children individually and leave unrelated pre-existing files alone.
+                for child in src.iterdir():
+                    mappings[str(dest / child.name)] = child
+            else:
+                copy_target = dest / src.name if destination.endswith("/") else dest
+                mappings[str(copy_target)] = src
+    selected = {}
+    for target, data in mappings.items():
+        if any(
+            p == target or p.startswith(target + "/") or target.startswith(p + "/")
+            for p in named
+        ):
+            if not data.exists() or not data.resolve().is_relative_to(
+                unit_dir.resolve()
+            ):
+                raise OrganizerFault(
+                    "the checker requires an absent organizer input or one outside its unit"
+                )
+            if (
+                data.is_symlink()
+                or pathlib.Path(target).is_symlink()
+                or any(parent.is_symlink() for parent in pathlib.Path(target).parents)
+            ):
+                raise OrganizerFault("the organizer input mapping contains a symlink")
+            if data.is_dir() and any(item.is_symlink() for item in data.rglob("*")):
+                raise OrganizerFault("the organizer input tree contains a symlink")
+            if any(
+                target == root or target.startswith(root + "/")
+                for root in _PRESENTABLE_OUTPUT_PATHS
+            ):
+                raise OrganizerFault(
+                    "the organizer input mapping overlaps a submission output path"
+                )
+            selected[target] = data
+    for path in named:
+        candidates = [
+            (target, data)
+            for target, data in selected.items()
+            if path == target or path.startswith(target + "/")
+        ]
+        if not candidates:
+            if not any(target.startswith(path + "/") for target in selected):
+                raise OrganizerFault(
+                    "the checker requires an unmapped organizer input path"
+                )
+        elif not any(
+            (data / pathlib.PurePosixPath(path).relative_to(target)).exists()
+            for target, data in candidates
+        ):
+            raise OrganizerFault("the checker requires an absent organizer input file")
+    return selected
+
+
+@contextlib.contextmanager
+def _present_input_file(target: pathlib.Path, data: pathlib.Path) -> Iterator[None]:
+    """Create exactly one absent input file; never replace an existing host entry."""
+    created_parents = []
+    created = False
+    try:
+        for parent in reversed(target.parents):
+            if parent.is_symlink():
+                raise OrganizerFault(
+                    "the organizer input destination has a symlink parent"
+                )
+            if not parent.exists():
+                parent.mkdir()
+                created_parents.append(parent)
+        with target.open("xb") as destination:
+            created = True
+            with data.open("rb") as source:
+                shutil.copyfileobj(source, destination)
+        yield
+    except OSError as exc:
+        raise OrganizerFault(
+            "the organizer input file cannot be presented without replacing existing state"
+        ) from exc
+    finally:
+        if created:
+            if target.is_symlink() or not target.is_file():
+                raise OrganizerFault(
+                    "the organizer input presentation was replaced by the checker"
+                )
+            target.unlink()
+        for parent in reversed(created_parents):
+            with contextlib.suppress(OSError):
+                parent.rmdir()
 
 
 @contextlib.contextmanager
 def _present_inputs(unit_dir: pathlib.Path, source: str) -> Iterator[None]:
-    """Provide only the selected unit's inputs at the paths its checker names."""
-    with contextlib.ExitStack() as stack:
+    """Present inputs; normalize only input setup/cleanup faults, never checker-body faults."""
+    stack = contextlib.ExitStack()
+    try:
         try:
-            for target, relative in _INPUT_PATHS.items():
-                if not re.search(r"[\"']" + re.escape(target) + r"(?:/|[\"'])", source):
+            for target, data in _input_presentations(unit_dir, source).items():
+                if data.resolve() == pathlib.Path(target).resolve():
                     continue
-                data = unit_dir / relative
-                if not data.is_dir():
-                    raise OrganizerFault(
-                        "the checker requires an absent organizer input directory"
-                    )
-                if data.resolve() != pathlib.Path(target).resolve():
+                if data.is_dir():
                     stack.enter_context(_present_output_at([target], data))
-        except _UnpresentableOutput as exc:
+                elif data.is_file():
+                    stack.enter_context(_present_input_file(pathlib.Path(target), data))
+                else:
+                    raise OrganizerFault(
+                        "the organizer input is not a regular file or directory"
+                    )
+        except (_UnpresentableOutput, OSError, UnicodeError, OrganizerFault):
+            # Neither source paths nor unit-specific destination names belong in feedback.
             raise OrganizerFault(
-                "the organizer input tree cannot be presented to its checker"
-            ) from exc
+                "the checker requires unavailable or unsafe organizer input"
+            ) from None
         yield
+    finally:
+        try:
+            stack.close()
+        except (_UnpresentableOutput, OSError, UnicodeError, OrganizerFault):
+            raise OrganizerFault(
+                "the organizer input presentation could not be restored"
+            ) from None
 
 
 def _run_trusted_checks(
@@ -806,9 +1047,11 @@ def _run_trusted_checks(
 
     env = {**os.environ, "OUTPUT_DIR": str(output_dir), "PYTHONDONTWRITEBYTECODE": "1"}
     try:
-        with _present_inputs(unit_dir, source), tempfile.TemporaryDirectory(
-            prefix="t1-checks-"
-        ) as scratch, _present_output_at(present_at, output_dir):
+        with (
+            _present_inputs(unit_dir, source),
+            tempfile.TemporaryDirectory(prefix="t1-checks-") as scratch,
+            _present_output_at(present_at, output_dir),
+        ):
             report_path = pathlib.Path(scratch) / "junit.xml"
             proc = subprocess.run(  # noqa: S603 - fixed argv, no shell
                 [
