@@ -89,7 +89,7 @@ jobs:
       - name: Install the track scoring package
         run: pip install -e . --no-deps
       - name: Scorer tests
-        run: python -m pytest tests/test_scoring_bypass.py tests/test_g2_canary_scan.py tests/test_checker_counts.py tests/test_checker_inputs.py -q
+        run: python -m pytest tests/test_scoring_bypass.py tests/test_g2_canary_scan.py tests/test_checker_counts.py tests/test_checker_inputs.py tests/test_checker_input_locations.py -q
       # Named explicitly rather than left to a `tests/` glob, because this job runs one file by
       # name: a new test that nothing invokes is a guard that reports green without executing.
       - name: Shared scorer version (pyproject <-> SCORER_VERSION <-> package)

@@ -39,9 +39,9 @@ def test_absent_organizer_data_is_not_a_wrong_answer(tmp_path, monkeypatch):
     (unit / "checks").mkdir(parents=True)
     (unit / "checks/test_outputs.py").write_text(
         'import os\nOUTPUT_DIR = os.environ["OUTPUT_DIR"]\n'
-        f'INPUT = {str(target)!r}\ndef test_result():\n    assert True\n'
+        f'INPUT = {str(target)!r}\ndef test_result():\n    assert isinstance(os.path.exists(INPUT), bool)\n'
     )
-    with pytest.raises(OrganizerFault, match="absent organizer input"):
+    with pytest.raises(OrganizerFault, match="organizer input"):
         scoring._run_trusted_checks(unit, tmp_path)
 
 
@@ -51,6 +51,6 @@ def test_populated_input_mount_is_not_overwritten(tmp_path, monkeypatch):
     (target / "untouched").write_text("original")
     monkeypatch.setattr(scoring, "_INPUT_PATHS", {str(target): ""})
     with pytest.raises(OrganizerFault):
-        with scoring._present_inputs(tmp_path, json.dumps(str(target))):
+        with scoring._present_inputs(tmp_path, "open(" + json.dumps(str(target)) + ")"):
             pytest.fail("must not enter the checker")
     assert (target / "untouched").read_text() == "original"
