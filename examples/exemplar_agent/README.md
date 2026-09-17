@@ -14,12 +14,18 @@ commands from the repository root inside an isolated Linux scoring container:
 ```bash
 python -m examples.exemplar_agent.solve solve \
   --task-dir units/t1-EXAMPLE-bs-greeks-pde --out /tmp/t1-exemplar-output
-qfbench2 smoke units/t1-EXAMPLE-bs-greeks-pde /tmp/t1-exemplar-output --track coding
 ```
 
-The expected result is `admissible=True, score=1.0`. These commands run in the Linux container
-CI test. `smoke` verifies existing output; it does not run an agent. The scorer needs permission
-to temporarily present this unit's input at `/input`. It refuses to overwrite a populated mount.
+This writes `results.parquet` to `/tmp/t1-exemplar-output`. To check it, use the sandbox route
+from the main README (step 6): build `finance-bench-sandbox:latest` and run the unit's
+`checks/test.sh` against that output directory. The expected result is `reward: 1.0` in
+`reward.json` (measured with toolkit `v2.4.2`: 14 checks pass, 1 skipped).
+
+`qfbench2 smoke ... --track coding` does **not** score Track 1 output: since toolkit `v2.4.0` it
+reports "This track has no local preview: the checker requires unavailable or unsafe organizer
+input" and exits 0. That is the expected message, not a fault in your setup — the rankable
+coding verifier runs only with organizer-held inputs, and `checks/test.sh` in the sandbox is
+the local route.
 
 ## Agent Integration
 
