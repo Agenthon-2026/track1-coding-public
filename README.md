@@ -148,7 +148,7 @@ docker run --rm --network qfb2-eval \
 - `--task-dir /input` — the task directory (instruction.md, data files, card.toml)
 - `--out /app/output` — where to write results (your Parquet/CSV/JSON output files)
 - `HTTP_PROXY` / `HTTPS_PROXY` — the audited proxy; **the only route out of the container**
-- `MODEL_ENDPOINT` — the organizer-hosted OpenAI-compatible endpoint (e.g. `http://model:8000/v1`), when available
+- `MODEL_ENDPOINT` — the origin of the organizer-hosted House route (e.g. `http://model:8443`, no path); the OpenAI-compatible API is served under `/v1`, and the per-unit bearer arrives as `MODEL_TOKEN` — see [Calling the House route](https://github.com/Agenthon-2026/Agenthon2026-public/blob/main/docs/HOUSE-MODEL.md#calling-the-house-route)
 - Vendor-side tools (web search, code execution, retrieval) **must be disabled** in your API
   calls — enforced by rule and by proxy audit. Model APIs are for inference only; you still
   cannot fetch data, packages, or web pages (the `g2` data/text cutoffs are unchanged).
