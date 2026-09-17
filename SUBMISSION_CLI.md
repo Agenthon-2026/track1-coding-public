@@ -23,9 +23,41 @@ every unit — as `127` if the verb is not on `PATH`, as `126` if it is present 
 or as whatever your own argument parser exits with if it consumes and rejects it. All three are
 recorded as **your** failure, not an organizer fault, and score zero on that unit.
 
-The harness logs `sha256(image)` (anti-cheat), enforces
-`card.environment.{cpus,memory,gpu,timeout,network}`, and mounts only files whose `manifest.json`
-checksum matches. `LABEL qfbench2.interface_version="2.0"` is required on the image.
+The harness logs `sha256(image)` (anti-cheat), applies the card's CPU, memory, GPU and network
+settings, and mounts only files whose `manifest.json` checksum matches.
+`LABEL qfbench2.interface_version="2.0"` is required on the image.
+
+For Development, Coding and Explainability take the per-unit timeout from `[agent].timeout_sec`;
+Forecasting and Simulation use the launcher's 1,800-second fallback where no timeout is supplied.
+The unit clock includes container creation and an image pull when needed. The ingestion stage
+runs units sequentially within a separate 43,200-second (12-hour) platform clock; scoring has
+its own stage clock. In the planned timing release, a House unit activates once when the organizer begins that unit's execution setup. Its fixed end is capped by the card/fallback unit ceiling and
+the remaining actual ingestion-stage time. Queue waiting and earlier units do not spend its own
+window; setup/provisioning and container creation/execution after activation can. Restarting or
+retrying under the same allocation resets neither the window nor request counters. Credentials
+last at most 7,200 seconds from issue and never beyond that fixed end. Deployment and verification
+remain required before opening; this changes no compute allowance.
+See the [Development runtime guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.2/docs/DEVELOPMENT-RUNTIME.md)
+for applied limits and pending access status. Development settings do not certify Final resources.
+
+Build a `linux/amd64` image identified by its immutable digest. Follow the
+[image submission guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.2/docs/IMAGE-SUBMISSIONS.md)
+for anonymous public pulls and the organizer confirmation required before using a private mirror.
+A descriptor category or image-access field does not itself make a service available.
+
+## Development submission limits
+
+At the participant Development opening, **Track 1 allows 1 upload per team per day**,
+with **20 total uploads per team for this track during Development**. Upload through your
+team's single designated CodaBench account. Held or cancelled uploads count even when they
+receive no score; local validation and packaging use no attempts. Track 1 has a 1-per-day limit;
+Tracks 2, 3 and 4 retain 5 per day.
+
+Development runs through **October 12, 2026**. The joint **Final + Verification phase runs
+October 13–25, 2026**. Each team makes **one final submission per track**; organizers perform
+verification within that same phase, with no separate participant Verification submission.
+Registration and Development close together on October 12, 2026 at **23:59 Anywhere on Earth (AoE, UTC−12)**. The joint Final + Verification phase closes on October 25, 2026 at **23:59 AoE**. Other competition dates and task/data cutoffs are unchanged.
+See the [Development submission limits](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.2/docs/DEVELOPMENT-RUNTIME.md#submission-limits-at-the-development-opening).
 
 ## Network modes (per unit card, `[environment].network`)
 
@@ -35,7 +67,7 @@ internet** in official scoring.
 | Mode | Who | Meaning |
 |---|---|---|
 | `none` | **Simulation (T3)** | Fully offline (`--network=none`). Exactly the historical closed-resource behavior; any attempted outbound connection fails the run. |
-| `restricted` | **Agent tracks (T1 coding, T2 forecasting, T4 analysis)** | No open internet. Egress **only** through the organizer's audited proxy to the **organizer-hosted model endpoint** given by `MODEL_ENDPOINT` (open models, free to use, per-run budget). Every connection is logged (domain, bytes, timestamps); the log is the audit artifact for the verification phase. |
+| `restricted` | **Agent tracks (T1 coding, T2 forecasting, T4 Explainability)** | No open internet. Egress **only** through the organizer's audited proxy to the **organizer-hosted model endpoint** given by `MODEL_ENDPOINT` (open models, free to use, per-run budget). Every connection is logged (domain, bytes, timestamps); the log is the audit artifact for verification within the joint Final + Verification phase. |
 
 > ### ⚠️ Agent tracks: there is no third-party model-API access
 >
@@ -46,7 +78,8 @@ internet** in official scoring.
 > API **will be refused by the proxy**, and there is no route around it: the eval network is
 > `--internal`, so the proxy is the only path off the host.
 >
-> Your two supported options are therefore:
+> The two model-access categories are described below. Their deployment availability is
+> announced separately; descriptor acceptance alone does not establish an available service:
 >
 > 1. **House endpoint** — call `MODEL_ENDPOINT` with `MODEL_NAME`. Free, metered per run.
 > 2. **Bring your own adapter (BYO)** — ship a **LoRA adapter, rank ≤ 64**, and nothing else.
@@ -69,8 +102,8 @@ stays `none`. For the agent tracks, every submission declares one category in `s
 
 | Category | What you bundle | Model access | Compute tier |
 |---|---|---|---|
-| `api` | prompts / harness / system-prompts / agents (your contribution is the scaffolding) | the **house endpoint only**, via the proxy | CPU |
-| `byo-large` | a **LoRA adapter** (`adapter_model.safetensors` + `adapter_config.json`), rank ≤ 64 — no model weights, no model server | the house endpoint only, serving the organizer's base **with your adapter loaded**; `$MODEL_NAME` names your adapter | CPU + API calls (the worker's GPU serves the base model) |
+| `api` | prompts / harness / system-prompts / agents (your contribution is the scaffolding) | the **house endpoint only**, via the proxy | the task card's CPU and GPU grant |
+| `byo-large` | a **LoRA adapter** (`adapter_model.safetensors` + `adapter_config.json`), rank ≤ 64 — no model weights, no model server | the house endpoint only, serving the organizer's base **with your adapter loaded**; `$MODEL_NAME` names your adapter | the task card's resource limits; organizer-managed model serving |
 
 **There is no small-weights tier.** `byo-small` and `byo-large` are **legacy names** the
 descriptor enum still accepts (`CATEGORIES = ("api", "byo-large", "byo-small", "simulator")` in
@@ -82,6 +115,10 @@ to load fails the submission at that point — an over-cap adapter is refused wi
 `LoRA rank 128 is greater than max_lora_rank 64`. To test locally,
 `vllm serve <base> --enable-lora --max-lora-rank 64 --lora-modules mine=<adapter-dir>`; vLLM's
 default `--max-lora-rank` is 16, so omitting the flag imposes a tighter cap than the competition's.
+
+`gpu = true` on a task card grants a device for permitted local code. The `api` category denotes
+House access and does not remove that GPU grant. This does not authorize an additional model
+server or change the adapter eligibility rules above.
 
 ### Container environment contract (`restricted` mode, set by the harness)
 
@@ -107,11 +144,18 @@ default `--max-lora-rank` is 16, so omitting the flag imposes a tighter cap than
    per-unit verdicts must agree exactly). That applies to BYO entries too: a
    BYO submission reaches its adapter through the same endpoint as an `api` one, so it is not
    bit-reproducible either.
-5. **Budget (FINAL, ruled 2026-08-28).** A uniform per-unit budget applies
-   to every submission — **1,000,000 input + 100,000 output tokens per unit**
-   — enforced via proxy logs and spot audit. It applies to house-endpoint calls, which is every
-   model call an agent can make: a BYO entry reaches its adapter through the same endpoint, so
-   the same budget applies to it.
+5. **House API allocation.** The input allowance is **1,000,000 input tokens per unit**.
+   The selected House allowance is **25 admitted requests per unit**, with **at most 4,000
+   output tokens per call**. Omitted output limits use 4,000; larger limits are reduced to
+   4,000, and smaller valid limits are preserved. Multiple generated alternatives are refused.
+   An admitted request is charged before forwarding: upstream failures or a lost response do
+   not refund it. An admitted participant or SDK retry can consume another slot, even with the
+   same content. Invalid requests refused before admission do not consume a slot. Keep track
+   of input use and budget automatic retries. These House request limits do not define a BYO
+   request limit or change artifact eligibility. The existing overall input/output token budget
+   remains the rule for any enabled BYO execution; this paragraph describes House admission.
+   Platform availability and deployment status
+   will be announced separately.
 
 **One leaderboard.** All categories rank on a single board; every entry is tagged with its
 category, the models used (pinned versions), and their training cutoffs.
@@ -166,8 +210,8 @@ everything else to `simulate`. Six of the public dev units (`t3-gbatch-*`) are b
 2. Output must validate against the track output schema *before* any scoring (`g1_schema`).
 3. The image must not read any path outside `/input` and `/output`; the canary registry and held-out
    targets are never mounted.
-4. Determinism: the harness sets `QFBENCH_SEED`; verification phase reruns on fresh seeds/resamples and
-   compares against the final-phase result (reproducibility gate).
+4. Determinism: the harness sets `QFBENCH_SEED`; organizer verification within the joint Final + Verification phase
+   reruns on fresh seeds/resamples and compares against the final-submission result (reproducibility gate).
 5. Wall-clock and resource caps are per-track (`card.environment`); exceeding them is a `g2` failure.
 6. **T2 text cutoff (g2):** every document in `/input/text/` must have a timestamp field ≤ `--asof`.
    The harness checks text timestamps in addition to panel data timestamps. A document with a
@@ -218,6 +262,6 @@ everything else to `simulate`. Six of the public dev units (`t3-gbatch-*`) are b
 Do **not** add `house_endpoint_only` -- or any key the descriptor schema does not list -- to
 `submission.json`: the schema refuses unknown keys, so a submission carrying it is rejected
 before it runs. Whether every model call used the house endpoint exclusively is read from
-the audited egress-proxy logs during the verification phase; it drives an "Open Division"
+the audited egress-proxy logs during the joint Final + Verification phase; it drives an "Open Division"
 display filter of the single leaderboard (never a separate ranking) and needs nothing
 from you.

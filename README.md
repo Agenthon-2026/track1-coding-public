@@ -63,11 +63,9 @@ git clone https://github.com/Agenthon-2026/track1-coding-public.git
 cd track1-coding-public
 
 # Install the shared scoring toolkit (inherits from the main repo).
-# Pin the tag, and pin this one: v2.3.1 rejects a descriptor the evaluation verifier accepts
-# (it requires at least one `models` entry; the current contract allows `"models": []`).
-# `pip show qfbench2-common` reports 2.3.1 from this tag -- the package metadata lags the tag.
-# That is cosmetic and expected; the code is the v2.4.0 code.
-pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.4.0#subdirectory=common"
+# Pin toolkit v2.4.2 for the current submission commands and model-free fixture.
+# The installed package reports version 2.4.2.
+pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.4.2#subdirectory=common"
 
 # Make THIS repo's track package importable. `qfbench2 smoke --track coding` loads
 # qfbench2_track_coding, which lives here and is not part of the toolkit; without this the
@@ -267,7 +265,7 @@ Full scoring code is in `qfbench2_track_coding/scoring.py`. It inherits all shar
 `qfbench2-common` toolkit. Install it with:
 
 ```bash
-pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.4.0#subdirectory=common"
+pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.4.2#subdirectory=common"
 ```
 
 ---
@@ -298,8 +296,10 @@ supply answers or a mock solve. Runtime depends on your agent and the selected t
    with its category, pinned models, and training cutoffs. In `submission.json` a BYO entry
    declares `byo-large` or `byo-small` — they are legacy names for the same thing, both still
    accepted by the descriptor enum. There is no small-weights tier. See [`SUBMISSION_CLI.md`](SUBMISSION_CLI.md) for the
-   adapter contract. A uniform per-unit model-API budget
-   applies (**final, ruled 2026-08-28: 1,000,000 input + 100,000 output tokens per unit**).
+   adapter contract. The existing allowance is **1,000,000 input + 100,000 output tokens per unit**.
+   House use is limited to **25 admitted requests per unit**, with **at most 4,000 output tokens
+   per request**; admitted failures and retries count. See the
+   [request-accounting rules](SUBMISSION_CLI.md#rules-for-model-api-use-restricted-mode).
 2. **Docker image.** CLI verb: `solve --task-dir /input --out /app/output`.
 3. **Time limit.** Per task, declared by `[agent].timeout_sec` in that unit's card; the card is
    authoritative. The value varies by unit — across the 87 public units it ranges from 1200 to
@@ -307,8 +307,17 @@ supply answers or a mock solve. Runtime depends on your agent and the selected t
    at 5400. `[verifier].timeout_sec` (the checker's budget, after your agent exits) and
    `[environment].build_timeout_sec` (the image build) are separate fields with their own values;
    do not read either as the agent's limit.
-4. **Resources.** 16 vCPUs, 128 GB RAM, GPU available. Every unit card declares this in
-   `[environment]` (`cpus = 16`, `memory = "128G"`, `gpu = true`); the card is authoritative.
+4. **Resources.** A 16-CPU quota, 128 GiB RAM, and GPU access for permitted local code.
+   Every unit card declares this in `[environment]` (`cpus = 16`, `memory = "128G"`, `gpu = true`); the card is authoritative.
+   The `api` category does not remove its GPU grant. See the
+   [Development runtime guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.2/docs/DEVELOPMENT-RUNTIME.md)
+   for the separate unit, platform-stage and House deadlines, temporary space and output limits,
+   and the [image guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.2/docs/IMAGE-SUBMISSIONS.md)
+   for public pulls and organizer-confirmed private mirrors. Final resources are announced separately.
+   The planned House timing release activates each unit once when the organizer begins that unit's execution setup. Queue waiting and earlier units do not spend its window, while setup/provisioning and
+   container creation/execution after activation can. The card/fallback ceiling and remaining
+   actual ingestion-stage time cap its fixed end; restart/retry does not renew the window or
+   counters. Deployment and verification remain required before opening; no compute grant grows.
 5. **Metric.** Mean pass@1, one execution per task, fixed denominator, no confidence interval.
    (pass@3 with bootstrap CIs exists only in the offline Harbor report.)
 6. **Baseline.** None. Entries are ranked against each other on pass@1 over the `private-test` split.
@@ -351,3 +360,15 @@ the private scorer.
 
 If you ever find any of the above in this repo, report it immediately to
 `qfbench@neurips2026.org` — it means the firewall has been breached.
+
+## Competition schedule and submission limits
+
+Development runs through **October 12, 2026**. The joint **Final + Verification phase runs
+October 13–25, 2026**. Each team makes **one final submission per track**; organizers perform
+verification within that same phase, with no separate participant Verification submission.
+Registration and Development close together on October 12, 2026 at **23:59 Anywhere on Earth (AoE, UTC−12)**. The joint Final + Verification phase closes on October 25, 2026 at **23:59 AoE**. Other competition dates and task/data cutoffs are unchanged.
+
+At the participant Development opening, Track 1 allows **1 upload per team per day**
+and **20 total uploads per team for this track during Development**. Use your team's single
+designated CodaBench account. Local validation and packaging use no attempts; held or cancelled
+uploads still count. See [submission limits](SUBMISSION_CLI.md#development-submission-limits).

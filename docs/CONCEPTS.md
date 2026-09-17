@@ -156,47 +156,55 @@ the fact that a bond price decreases when yield increases).
 
 ---
 
-## What is pass@1 and pass@3?
+## What are pass@1 and pass@3?
 
-Track 1 grades agents on **pass@k** — the probability that the agent solves a task correctly
-in *k* tries. This metric comes from the code generation literature and corrects for the
-fact that language models are stochastic: they give different outputs each time you call them,
-and some of those outputs will be correct even if others are not.
+### Official leaderboard: one execution per task
 
-### Concrete numeric example
+The official Track 1 metric is **mean pass@1** (higher is better), computed from **one
+execution per task** over the signed task roster with a fixed denominator. An execution earns
+1 only if it passes all four admissibility and correctness gates; otherwise it earns 0.
+Wrong, crashed, timed-out or missing outputs remain in the denominator as zero. The score is
+therefore the fraction of tasks solved in that single execution. It is published **without a
+confidence interval** (ruled 2026-09-03).
 
-Suppose we give an agent 3 attempts on each of 4 tasks. Here are the results:
+### Offline development: repeated attempts
+
+The Harbor development report can use several attempts per task to estimate **pass@k**: the
+probability that at least one of *k* independent attempts passes. For a task with *n* observed
+attempts and *c* passes, the shared scorer uses:
+
+```text
+pass@k = 1 - C(n - c, k) / C(n, k), with n >= k
+```
+
+Here `C(a, b)` counts combinations and is zero when `b > a`. In particular, **pass@1 = c / n**:
+all observed attempts contribute, regardless of their order. It does not select the first
+recorded attempt. The report averages these per-task estimates, giving each task equal weight.
+
+For illustration, suppose an offline run gives an agent 3 attempts on each of 4 tasks:
 
 | Task | Attempt 1 | Attempt 2 | Attempt 3 | pass@1 | pass@3 |
 |---|---|---|---|---|---|
-| T1 | ✓ | ✓ | ✗ | 1 | 1 |
-| T2 | ✗ | ✗ | ✓ | 0 | 1 |
+| T1 | ✓ | ✓ | ✗ | 2/3 | 1 |
+| T2 | ✗ | ✗ | ✓ | 1/3 | 1 |
 | T3 | ✗ | ✗ | ✗ | 0 | 0 |
-| T4 | ✓ | ✗ | ✓ | 1 | 1 |
+| T4 | ✓ | ✗ | ✓ | 2/3 | 1 |
 
-- **pass@1** for each task: Did attempt 1 pass? Results: 1, 0, 0, 1. Mean = **0.50**
-- **pass@3** for each task: Did any of 3 attempts pass? Results: 1, 1, 0, 1. Mean = **0.75**
+- **Mean pass@1** = `(2/3 + 1/3 + 0 + 2/3) / 4` = **5/12 ≈ 0.417**.
+- **Mean pass@3** = `(1 + 1 + 0 + 1) / 4` = **0.75**.
 
-So this agent has **mean pass@1 = 0.50** and **mean pass@3 = 0.75** over these 4 tasks.
+With exactly three attempts per task, pass@3 is 1 if any attempt passes and 0 otherwise. With
+more than three attempts, the scorer uses the formula above. The offline report also computes
+bootstrap confidence intervals across tasks; none are shown in this example. These estimates
+and intervals do not change the official rule of one execution per task.
 
-**pass@1 is the leaderboard metric** (higher is better), computed from **one execution per
-task** over the signed roster with a fixed denominator, and published without a confidence
-interval (ruled 2026-09-03). pass@3, and the bootstrap confidence intervals in the table above,
-belong to the offline Harbor development report, which runs several attempts per task; they
-are not the official aggregate.
+### How does this relate to accuracy?
 
-### Why not just use "accuracy"?
-
-"Accuracy" (did the agent always get it right?) is too strict — a near-miss on attempt 2 still
-counts as zero. pass@k respects the stochastic nature of language models and rewards
-consistency. A team whose agent solves each task 2 out of 3 times scores better than a team
-whose agent solves half the tasks perfectly and fails all others.
-
-**pass@1 in one sentence:** the fraction of tasks where the agent's *first* attempt passes all
-tests; the leaderboard metric.
-
-**pass@3 in one sentence:** the fraction of tasks where *at least one* of three attempts passes;
-rewards consistency.
+For the official one-execution setup, pass@1 is task-level accuracy: the number of tasks solved
+divided by the number of tasks in the fixed roster. "Accuracy" does not mean that every attempt
+must succeed. For repeated-attempt analysis, pass@1 estimates single-attempt success, while
+pass@3 estimates the chance of at least one success in three attempts. Neither metric awards
+partial credit for an attempt that fails a required gate or correctness check.
 
 ---
 
