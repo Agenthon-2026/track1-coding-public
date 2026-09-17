@@ -11,10 +11,10 @@ every part of the contract. It is an illustration, not a competitor and not a th
 The call goes out over the **restricted** eval network the only way any
 submission can reach a model:
 
-- the **organizer-hosted model endpoint** (`$MODEL_ENDPOINT`, an
-  OpenAI-compatible server such as `http://model:8000/v1`; open models, free,
-  within the per-run budget), reached through the organizer's audited proxy
-  (`HTTPS_PROXY`).
+- the **organizer-hosted model endpoint** (`$MODEL_ENDPOINT`, the route origin such as
+  `http://model:8443`; the OpenAI-compatible API is served under `/v1`, with the per-unit bearer
+  in `$MODEL_TOKEN`; open models, free, within the per-run budget), reached through the
+  organizer's audited proxy (`HTTPS_PROXY`).
 
 Vendor APIs — `api.anthropic.com`, `api.openai.com`,
 `generativelanguage.googleapis.com`, any other — are **refused by the proxy**
@@ -56,9 +56,9 @@ either path is lost. A path outside those two is written into your container's o
 and discarded by `--rm`. See [`SUBMISSION_CLI.md`](../SUBMISSION_CLI.md), invariant 8.
 
 `HTTP_PROXY`/`HTTPS_PROXY` point at the audited proxy (the only route out of
-the container); `MODEL_ENDPOINT` points at the organizer-hosted
-OpenAI-compatible endpoint when available, and `MODEL_NAME` names the served
-model. No API keys are injected and none exist (policy 2026-08-04). For a local smoke run without
+the container); `MODEL_ENDPOINT` is the origin of the organizer-hosted route (the API is under
+`/v1`), `MODEL_TOKEN` is the per-unit bearer, and `MODEL_NAME` names the served model. No
+vendor API keys are injected and none exist (policy 2026-08-04). For a local smoke run without
 the eval network, the harness falls back to `--network=none` with a warning —
 an agent then gets no model access, so expect reward 0.
 
@@ -106,9 +106,12 @@ from openai import OpenAI        # call goes out via the audited proxy (HTTPS_PR
 
 def solve(task_dir: str, out_dir: str) -> None:
     instruction = (pathlib.Path(task_dir) / "instruction.md").read_text()
-    # The house endpoint is the ONLY reachable model. No API key is injected and
-    # none exists; vendor endpoints are refused by the proxy (policy 2026-08-04).
-    client = OpenAI(base_url=os.environ["MODEL_ENDPOINT"], api_key="unused")
+    # The house endpoint is the ONLY reachable model; vendor endpoints are refused by the
+    # proxy (policy 2026-08-04). $MODEL_ENDPOINT is the route ORIGIN and the API is under /v1;
+    # the per-unit bearer arrives as $MODEL_TOKEN. base_url=$MODEL_ENDPOINT alone posts to
+    # /chat/completions and is refused with 403 -- append /v1.
+    client = OpenAI(base_url=os.environ["MODEL_ENDPOINT"].rstrip("/") + "/v1",
+                    api_key=os.environ["MODEL_TOKEN"])
     response = client.chat.completions.create(
         model=os.environ["MODEL_NAME"],      # pinned by the organizer, disclosed per run
         max_tokens=4096,
