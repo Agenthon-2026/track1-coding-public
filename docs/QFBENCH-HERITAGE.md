@@ -64,7 +64,7 @@ qfbench2 track1 score-harbor-job --job-dir <dir>/<name> --units-dir units
 # out to harbor (never imports it). The track1-harbor extra (harbor>=0.15.0; its Python>=3.12
 # floor is met by the org's 3.13) is
 # only for an operator running this path:
-#   pip install "qfbench2-common[track1-harbor] @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.4.0#subdirectory=common"
+#   pip install "qfbench2-common[track1-harbor] @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.4.2#subdirectory=common"
 
 # 1c. For the direct Docker agent-then-checker flow, follow README step 6.
 # qfbench2 smoke verifies existing outputs; it does not launch either container.
