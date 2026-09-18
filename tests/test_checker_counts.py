@@ -58,3 +58,49 @@ def test_no_passing_tests_is_an_organizer_fault(tmp_path, checks):
     ctx = context(tmp_path, checks)
     with pytest.raises(OrganizerFault, match="passed no tests"):
         build_verifier(ctx).run(ctx)
+
+
+@pytest.mark.parametrize("checks", [
+    'def test_wrong():\n    assert False, "synthetic-private-diagnostic"\n',
+    'def test_good():\n    assert True\n',
+    'raise RuntimeError("synthetic-private-diagnostic")\n',
+])
+def test_private_capture_preserves_full_checker_output_and_junit(tmp_path, monkeypatch, checks):
+    import sys
+    from types import SimpleNamespace
+    from qfbench2_track_coding import scoring
+    root = tmp_path / "private"
+    root.mkdir(mode=0o700)
+    monkeypatch.setitem(sys.modules, "qfbench2_common.private_diagnostics",
+                        SimpleNamespace(directory=lambda: root, unit_key=lambda name: "synthetic"))
+    ctx = context(tmp_path, checks)
+    scoring._run_trusted_checks(ctx["unit_dir"], ctx["output_dir"])
+    target = root / "synthetic-checker"
+    assert (target / "junit.xml").is_file()
+    assert (target / "stdout.log").stat().st_size > 0
+    assert json.loads((target / "status.json").read_text())["junit_present"]
+    for path in target.iterdir():
+        assert path.stat().st_mode & 0o077 == 0
+    assert not list(ctx["output_dir"].glob("*.log"))
+
+
+def test_private_timeout_preserves_partial_streams(tmp_path, monkeypatch):
+    import subprocess
+    import sys
+    from types import SimpleNamespace
+    from qfbench2_track_coding import scoring
+    root = tmp_path / "private"
+    root.mkdir(mode=0o700)
+    monkeypatch.setitem(sys.modules, "qfbench2_common.private_diagnostics",
+                        SimpleNamespace(directory=lambda: root, unit_key=lambda name: "synthetic"))
+    ctx = context(tmp_path, "def test_good():\n    assert True\n")
+    def timeout(*args, **kwargs):
+        raise subprocess.TimeoutExpired("synthetic-checker", 1, output=b"partial", stderr=b"error")
+    monkeypatch.setattr(scoring, "_require_test_runner", lambda: None)
+    monkeypatch.setattr(scoring.subprocess, "run", timeout)
+    passed, detail = scoring._run_trusted_checks(ctx["unit_dir"], ctx["output_dir"])
+    assert not passed and detail["trusted_checks"] == "timeout"
+    target = root / "synthetic-checker"
+    assert (target / "stdout.log").read_bytes() == b"partial"
+    status = json.loads((target / "status.json").read_text())
+    assert status["timed_out"] and not status["junit_present"]
