@@ -62,7 +62,7 @@ def test_no_passing_tests_is_an_organizer_fault(tmp_path, checks):
 
 @pytest.mark.parametrize("checks", [
     'def test_wrong():\n    assert False, "synthetic-private-diagnostic"\n',
-    'def test_good():\n    assert True\n',
+    'def test_good():\n    print("synthetic-private-diagnostic"); assert True\n',
     'raise RuntimeError("synthetic-private-diagnostic")\n',
 ])
 def test_private_capture_preserves_full_checker_output_and_junit(tmp_path, monkeypatch, checks):
@@ -75,10 +75,13 @@ def test_private_capture_preserves_full_checker_output_and_junit(tmp_path, monke
                         SimpleNamespace(directory=lambda: root, unit_key=lambda name: "synthetic"))
     ctx = context(tmp_path, checks)
     scoring._run_trusted_checks(ctx["unit_dir"], ctx["output_dir"])
-    target = root / "synthetic-checker"
+    import hashlib
+    target = root / (hashlib.sha256(ctx["unit_dir"].name.encode()).hexdigest() + "-checker")
     assert (target / "junit.xml").is_file()
     assert (target / "stdout.log").stat().st_size > 0
     assert json.loads((target / "status.json").read_text())["junit_present"]
+    if "def test_good" in checks:
+        assert "synthetic-private-diagnostic" in (target / "junit.xml").read_text()
     for path in target.iterdir():
         assert path.stat().st_mode & 0o077 == 0
     assert not list(ctx["output_dir"].glob("*.log"))
@@ -100,7 +103,8 @@ def test_private_timeout_preserves_partial_streams(tmp_path, monkeypatch):
     monkeypatch.setattr(scoring.subprocess, "run", timeout)
     passed, detail = scoring._run_trusted_checks(ctx["unit_dir"], ctx["output_dir"])
     assert not passed and detail["trusted_checks"] == "timeout"
-    target = root / "synthetic-checker"
+    import hashlib
+    target = root / (hashlib.sha256(ctx["unit_dir"].name.encode()).hexdigest() + "-checker")
     assert (target / "stdout.log").read_bytes() == b"partial"
     status = json.loads((target / "status.json").read_text())
     assert status["timed_out"] and not status["junit_present"]

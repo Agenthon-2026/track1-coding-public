@@ -45,6 +45,7 @@ import ast
 import contextlib
 import json
 import importlib
+import hashlib
 import sys
 import subprocess
 import os
@@ -966,24 +967,27 @@ def _present_inputs(unit_dir: pathlib.Path, source: str) -> Iterator[None]:
             ) from None
 
 
-def _save_private_checker_diagnostics(
-    unit_dir: pathlib.Path,
-    report_path: pathlib.Path,
-    process: subprocess.CompletedProcess[str] | subprocess.TimeoutExpired,
-) -> None:
-    """Export only through the Hub's validated, organizer-only capture context."""
+def _private_checker_root() -> pathlib.Path | None:
+    """Use only the Hub's validated, organizer-only capture context."""
     try:
         private_diagnostics = importlib.import_module(
             "qfbench2_common.private_diagnostics"
         )
     except ImportError:
-        return  # Older toolkits and participant installations retain existing behavior.
+        return None  # Older toolkits retain existing behavior.
     root = private_diagnostics.directory()
+    return pathlib.Path(root) if root is not None else None
+
+
+def _save_private_checker_diagnostics(
+    unit_dir: pathlib.Path,
+    report_path: pathlib.Path,
+    process: subprocess.CompletedProcess[str] | subprocess.TimeoutExpired,
+) -> None:
+    root = _private_checker_root()
     if root is None:
         return
-    target = pathlib.Path(root) / (
-        private_diagnostics.unit_key(unit_dir.name) + "-checker"
-    )
+    target = root / (hashlib.sha256(unit_dir.name.encode()).hexdigest() + "-checker")
     target.mkdir(mode=0o700, exist_ok=True)
     for name, content in (
         ("stdout.log", process.stdout),
@@ -1105,6 +1109,16 @@ def _run_trusted_checks(
                         "-p",
                         "no:cacheprovider",
                         f"--junitxml={report_path}",
+                        *(
+                            [
+                                "-o",
+                                "junit_logging=all",
+                                "-o",
+                                "junit_log_passing_tests=true",
+                            ]
+                            if _private_checker_root() is not None
+                            else []
+                        ),
                     ],
                     capture_output=True,
                     text=True,
