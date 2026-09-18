@@ -19,9 +19,9 @@ submission can reach a model:
 Vendor APIs — `api.anthropic.com`, `api.openai.com`,
 `generativelanguage.googleapis.com`, any other — are **refused by the proxy**
 (policy 2026-08-04), and no participant API keys exist: the harness injects none
-and there is no mechanism to supply one. The alternative is a BYO entry, which
-ships a **LoRA adapter of rank ≤ 64** — not model weights — that the organizer
-loads onto the base model behind `$MODEL_ENDPOINT`. See `SUBMISSION_CLI.md`.
+and there is no mechanism to supply one. There is no bring-your-own alternative:
+every submission runs against the House model behind `$MODEL_ENDPOINT` (ruling of
+2026-09-18). See `SUBMISSION_CLI.md`.
 
 There is no open internet either way; every connection is logged. An agent of this shape is a
 **category `api`** entry: it ships no adapter — the whole contribution is the prompt and the
