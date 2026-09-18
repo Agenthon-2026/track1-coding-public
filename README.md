@@ -63,9 +63,9 @@ git clone https://github.com/Agenthon-2026/track1-coding-public.git
 cd track1-coding-public
 
 # Install the shared scoring toolkit (inherits from the main repo).
-# Pin toolkit v2.4.2 for the current submission commands and model-free fixture.
+# Pin toolkit v2.4.3 for the current submission commands and fixtures.
 # The installed package reports version 2.4.2.
-pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.4.2#subdirectory=common"
+pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.4.3#subdirectory=common"
 
 # Make THIS repo's track package importable. `qfbench2 smoke --track coding` loads
 # qfbench2_track_coding, which lives here and is not part of the toolkit; without this the
@@ -265,7 +265,7 @@ Full scoring code is in `qfbench2_track_coding/scoring.py`. It inherits all shar
 `qfbench2-common` toolkit. Install it with:
 
 ```bash
-pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.4.2#subdirectory=common"
+pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.4.3#subdirectory=common"
 ```
 
 ---
@@ -289,14 +289,13 @@ supply answers or a mock solve. Runtime depends on your agent and the selected t
    execution, retrieval) must be disabled. Fetching data, packages, or web pages is impossible.
    Every connection is logged and audited. Model versions must be pinned (dated snapshots) and
    each model's training cutoff disclosed in the submission metadata; temperature/seed pinned
-   where the API supports it. Two ways to submit — `api` (house endpoint only; your contribution
-   is the prompts/harness) and BYO (you ship a **LoRA adapter of rank ≤ 64**, never model
-   weights and never a model server, and the organizer serves the base model with your adapter
-   loaded) — share one leaderboard; every entry is tagged
-   with its category, pinned models, and training cutoffs. In `submission.json` a BYO entry
-   declares `byo-large` or `byo-small` — they are legacy names for the same thing, both still
-   accepted by the descriptor enum. There is no small-weights tier. See [`SUBMISSION_CLI.md`](SUBMISSION_CLI.md) for the
-   adapter contract. The existing allowance is **1,000,000 input + 100,000 output tokens per unit**.
+   where the API supports it. Every submission runs against the House model: `category` is
+   `api` (house endpoint only; your contribution is the prompts/harness). **Bring-your-own
+   models and adapters are not part of this competition** (ruling of 2026-09-18); the former
+   `byo-large` / `byo-small` values are invalid since toolkit 2.4.3, and an upload that still
+   carries one is held and never run. Every entry is tagged with its category, pinned models,
+   and training cutoffs. See [`SUBMISSION_CLI.md`](SUBMISSION_CLI.md). The existing allowance is
+   **1,000,000 input + 100,000 output tokens per unit**.
    House use is limited to **25 admitted requests per unit**, with **at most 4,000 output tokens
    per request**; admitted failures and retries count. See the
    [request-accounting rules](SUBMISSION_CLI.md#rules-for-model-api-use-restricted-mode).
@@ -310,9 +309,9 @@ supply answers or a mock solve. Runtime depends on your agent and the selected t
 4. **Resources.** A 16-CPU quota, 128 GiB RAM, and GPU access for permitted local code.
    Every unit card declares this in `[environment]` (`cpus = 16`, `memory = "128G"`, `gpu = true`); the card is authoritative.
    The `api` category does not remove its GPU grant. See the
-   [Development runtime guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.2/docs/DEVELOPMENT-RUNTIME.md)
+   [Development runtime guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.3/docs/DEVELOPMENT-RUNTIME.md)
    for the separate unit, platform-stage and House deadlines, temporary space and output limits,
-   and the [image guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.2/docs/IMAGE-SUBMISSIONS.md)
+   and the [image guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.3/docs/IMAGE-SUBMISSIONS.md)
    for public pulls and organizer-confirmed private mirrors. Final resources are announced separately.
    The planned House timing release activates each unit once when the organizer begins that unit's execution setup. Queue waiting and earlier units do not spend its window, while setup/provisioning and
    container creation/execution after activation can. The card/fallback ceiling and remaining

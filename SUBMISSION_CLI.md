@@ -37,11 +37,11 @@ window; setup/provisioning and container creation/execution after activation can
 retrying under the same allocation resets neither the window nor request counters. Credentials
 last at most 7,200 seconds from issue and never beyond that fixed end. Deployment and verification
 remain required before opening; this changes no compute allowance.
-See the [Development runtime guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.2/docs/DEVELOPMENT-RUNTIME.md)
+See the [Development runtime guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.3/docs/DEVELOPMENT-RUNTIME.md)
 for applied limits and pending access status. Development settings do not certify Final resources.
 
 Build a `linux/amd64` image identified by its immutable digest. Follow the
-[image submission guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.2/docs/IMAGE-SUBMISSIONS.md)
+[image submission guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.3/docs/IMAGE-SUBMISSIONS.md)
 for anonymous public pulls and the organizer confirmation required before using a private mirror.
 A descriptor category or image-access field does not itself make a service available.
 
@@ -57,7 +57,7 @@ Development runs through **October 12, 2026**. The joint **Final + Verification 
 October 13–25, 2026**. Each team makes **one final submission per track**; organizers perform
 verification within that same phase, with no separate participant Verification submission.
 Registration and Development close together on October 12, 2026 at **23:59 Anywhere on Earth (AoE, UTC−12)**. The joint Final + Verification phase closes on October 25, 2026 at **23:59 AoE**. Other competition dates and task/data cutoffs are unchanged.
-See the [Development submission limits](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.2/docs/DEVELOPMENT-RUNTIME.md#submission-limits-at-the-development-opening).
+See the [Development submission limits](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.3/docs/DEVELOPMENT-RUNTIME.md#submission-limits-at-the-development-opening).
 
 ## Network modes (per unit card, `[environment].network`)
 
@@ -78,16 +78,11 @@ internet** in official scoring.
 > API **will be refused by the proxy**, and there is no route around it: the eval network is
 > `--internal`, so the proxy is the only path off the host.
 >
-> The two model-access categories are described below. Their deployment availability is
-> announced separately; descriptor acceptance alone does not establish an available service:
->
-> 1. **House endpoint** — call `MODEL_ENDPOINT` with `MODEL_NAME`. Free, metered per run.
-> 2. **Bring your own adapter (BYO)** — ship a **LoRA adapter, rank ≤ 64**, and nothing else.
->    You do not bundle model weights and you do not run a model server. The organizer starts a
->    dedicated server for your submission on the same base model served at `$MODEL_ENDPOINT`,
->    with your adapter loaded at launch, and destroys it when your submission finishes. At run
->    time your code sees the same contract as an `api` submission: call `$MODEL_ENDPOINT` with
->    `$MODEL_NAME`, which for a BYO run names *your adapter*. Nothing is fetched at run time.
+> There is one model access: the **House endpoint** — call `$MODEL_ENDPOINT/v1/chat/completions`
+> with `MODEL_NAME` and the `MODEL_TOKEN` bearer (see `docs/HOUSE-MODEL.md` in the hub). Free,
+> metered per run. **Bring-your-own models and adapters are not part of this competition**
+> (ruling of 2026-09-18): no LoRA adapter path, no in-image model weights path, nothing fetched
+> at run time.
 >
 > **No participant API keys exist.** The harness injects none and there is no mechanism for a
 > submission to supply one, so a vendor key would have nothing to reach even if you had one.
@@ -103,18 +98,13 @@ stays `none`. For the agent tracks, every submission declares one category in `s
 | Category | What you bundle | Model access | Compute tier |
 |---|---|---|---|
 | `api` | prompts / harness / system-prompts / agents (your contribution is the scaffolding) | the **house endpoint only**, via the proxy | the task card's CPU and GPU grant |
-| `byo-large` | a **LoRA adapter** (`adapter_model.safetensors` + `adapter_config.json`), rank ≤ 64 — no model weights, no model server | the house endpoint only, serving the organizer's base **with your adapter loaded**; `$MODEL_NAME` names your adapter | the task card's resource limits; organizer-managed model serving |
 
-**There is no small-weights tier.** `byo-small` and `byo-large` are **legacy names** the
-descriptor enum still accepts (`CATEGORIES = ("api", "byo-large", "byo-small", "simulator")` in
-`qfbench2_common.contracts.descriptor`); they no longer describe two different tiers. BYO means
-bring your own **adapter**. Additional build rules: exactly one adapter per submission; declare
-`target_modules` accurately in `adapter_config.json`, as it is read; full fine-tuning is not
-permitted; extraction is static, so none of your code runs during it, and an adapter that fails
-to load fails the submission at that point — an over-cap adapter is refused with
-`LoRA rank 128 is greater than max_lora_rank 64`. To test locally,
-`vllm serve <base> --enable-lora --max-lora-rank 64 --lora-modules mine=<adapter-dir>`; vLLM's
-default `--max-lora-rank` is 16, so omitting the flag imposes a tighter cap than the competition's.
+**Every submission runs against the House model.** Submitting your own model or adapter is not
+part of this competition, so `api` is the category for every agent-track entry (if your agent
+calls no model at all, declare `api` and leave `models` empty). The former `byo-small` /
+`byo-large` values are invalid since toolkit 2.4.3 (`CATEGORIES = ("api", "simulator")` in
+`qfbench2_common.contracts.descriptor`): `qfbench2 submission pack` refuses them, and an upload
+that still carries one is held by the organizer's intake and never run.
 
 `gpu = true` on a task card grants a device for permitted local code. The `api` category denotes
 House access and does not remove that GPU grant. This does not authorize an additional model
@@ -138,13 +128,10 @@ server or change the adapter eligibility rules above.
 2. **Pin model versions.** The house endpoint serves a pinned model id (`MODEL_NAME`). Floating
    aliases (`*-latest`) are not reproducible and are rejected at verification.
 3. **Disclose training cutoffs.** The training cutoff of every model used MUST be declared in
-   submission metadata (`models[].training_cutoff` in `submission.json`). For a BYO entry that
-   is the organizer's base model, which your adapter is trained on top of.
+   submission metadata (`models[].training_cutoff` in `submission.json`).
 4. **Pin temperature/seed** where the API supports it. Entries are verified
    *statistically* (bootstrap-CI overlap on organizer rerun for T2/T3/T4; for T1, the single-pass
-   per-unit verdicts must agree exactly). That applies to BYO entries too: a
-   BYO submission reaches its adapter through the same endpoint as an `api` one, so it is not
-   bit-reproducible either.
+   per-unit verdicts must agree exactly).
 5. **House API allocation.** The input allowance is **1,000,000 input tokens per unit**.
    The selected House allowance is **25 admitted requests per unit**, with **at most 4,000
    output tokens per call**. Omitted output limits use 4,000; larger limits are reduced to
@@ -152,10 +139,7 @@ server or change the adapter eligibility rules above.
    An admitted request is charged before forwarding: upstream failures or a lost response do
    not refund it. An admitted participant or SDK retry can consume another slot, even with the
    same content. Invalid requests refused before admission do not consume a slot. Keep track
-   of input use and budget automatic retries. These House request limits do not define a BYO
-   request limit or change artifact eligibility. The existing overall input/output token budget
-   remains the rule for any enabled BYO execution; this paragraph describes House admission.
-   Platform availability and deployment status
+   of input use and budget automatic retries. Platform availability and deployment status
    will be announced separately.
 
 **One leaderboard.** All categories rank on a single board; every entry is tagged with its

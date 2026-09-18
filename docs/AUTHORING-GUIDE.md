@@ -25,12 +25,12 @@ competition-wide GLOSSARY published with the shared toolkit:
 
 ## Prerequisites: install the tools
 
-Before you start, install the shared toolkit (pinned to the `v2.4.2` release) and build the
+Before you start, install the shared toolkit (pinned to the `v2.4.3` release) and build the
 shared sandbox base image:
 
 ```bash
 # Install the shared qfbench2 toolkit from the main repo (pinned tag)
-pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.4.2#subdirectory=common"
+pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.4.3#subdirectory=common"
 
 # Build the shared sandbox base ONCE, from the public repo root. It bakes the financial stack
 # (numpy/pandas/scipy/pyarrow) AND the verification stack (pytest, pytest-json-report,

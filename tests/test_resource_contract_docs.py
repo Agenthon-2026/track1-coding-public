@@ -32,9 +32,8 @@ import tomllib
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 
-# Prose figures, anywhere in a tracked .md. "80GB-class GPU" (a byo-large tier note in
-# README.md and SUBMISSION_CLI.md) is deliberately not matched: it is a model-weights tier,
-# not the per-unit RAM limit.
+# Prose figures, anywhere in a tracked .md. "80GB-class GPU" (a former model-weights tier
+# note) is deliberately not matched: it was a model-weights tier, not the per-unit RAM limit.
 VCPU_RE = re.compile(r"(\d+)\s*vCPUs?\b", re.I)
 RAM_RE = re.compile(r"(\d+)\s*GB RAM\b", re.I)
 NO_GPU_RE = re.compile(r"\bno GPU\b", re.I)
