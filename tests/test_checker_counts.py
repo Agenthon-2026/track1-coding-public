@@ -72,7 +72,7 @@ def test_private_capture_preserves_full_checker_output_and_junit(tmp_path, monke
     root = tmp_path / "private"
     root.mkdir(mode=0o700)
     monkeypatch.setitem(sys.modules, "qfbench2_common.private_diagnostics",
-                        SimpleNamespace(directory=lambda: root, unit_key=lambda name: "synthetic"))
+                        SimpleNamespace(directory=lambda: root))
     ctx = context(tmp_path, checks)
     scoring._run_trusted_checks(ctx["unit_dir"], ctx["output_dir"])
     import hashlib
@@ -95,7 +95,7 @@ def test_private_timeout_preserves_partial_streams(tmp_path, monkeypatch):
     root = tmp_path / "private"
     root.mkdir(mode=0o700)
     monkeypatch.setitem(sys.modules, "qfbench2_common.private_diagnostics",
-                        SimpleNamespace(directory=lambda: root, unit_key=lambda name: "synthetic"))
+                        SimpleNamespace(directory=lambda: root))
     ctx = context(tmp_path, "def test_good():\n    assert True\n")
     def timeout(*args, **kwargs):
         raise subprocess.TimeoutExpired("synthetic-checker", 1, output=b"partial", stderr=b"error")
@@ -108,3 +108,47 @@ def test_private_timeout_preserves_partial_streams(tmp_path, monkeypatch):
     assert (target / "stdout.log").read_bytes() == b"partial"
     status = json.loads((target / "status.json").read_text())
     assert status["timed_out"] and not status["junit_present"]
+
+
+@pytest.mark.parametrize("helper_present", [False, True])
+def test_no_private_context_preserves_participant_pytest_options(tmp_path, monkeypatch, helper_present):
+    import sys
+    from types import SimpleNamespace
+    from qfbench2_track_coding import scoring
+    monkeypatch.setitem(sys.modules, "qfbench2_common.private_diagnostics",
+                        SimpleNamespace(directory=lambda: None) if helper_present else None)
+    ctx = context(tmp_path, "def test_good():\n    assert True\n")
+    original = scoring.subprocess.run
+    calls = []
+    def run(argv, **kwargs):
+        calls.append(argv)
+        return original(argv, **kwargs)
+    monkeypatch.setattr(scoring.subprocess, "run", run)
+    passed, detail = scoring._run_trusted_checks(ctx["unit_dir"], ctx["output_dir"])
+    assert passed and detail["checks_passed"] == 1
+    assert not any("junit_logging=all" in argv for argv in calls)
+    assert not list(tmp_path.rglob("*-checker"))
+
+
+@pytest.mark.parametrize("answer", [True, False])
+def test_private_capture_does_not_change_admission_or_counts(tmp_path, monkeypatch, answer):
+    import sys
+    from types import SimpleNamespace
+    from qfbench2_track_coding import scoring
+    helper = SimpleNamespace(directory=lambda: None)
+    monkeypatch.setitem(sys.modules, "qfbench2_common.private_diagnostics", helper)
+    ctx = context(tmp_path, f"def test_answer():\n    assert {answer}\n")
+    ctx["operator_sink"] = tmp_path / "counts"
+    without = build_verifier(ctx).run(ctx)
+    root = tmp_path / "private"
+    root.mkdir(mode=0o700)
+    helper.directory = lambda: root
+    with_capture = build_verifier(ctx).run(ctx)
+    assert with_capture.admissible == without.admissible == answer
+    assert with_capture.score == without.score
+    counts = [json.loads(line) for line in
+              (ctx["operator_sink"] / "track1_checker_counts.jsonl").read_text().splitlines()]
+    assert len(counts) == 2 and counts[0] == counts[1]
+    assert counts[0]["checks_run"] == 1
+    assert counts[0]["checks_passed"] == int(answer)
+    assert scoring._private_checker_root() == root
