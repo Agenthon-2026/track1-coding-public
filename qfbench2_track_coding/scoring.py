@@ -44,6 +44,8 @@ from __future__ import annotations
 import ast
 import contextlib
 import json
+import importlib
+import hashlib
 import sys
 import subprocess
 import os
@@ -965,6 +967,48 @@ def _present_inputs(unit_dir: pathlib.Path, source: str) -> Iterator[None]:
             ) from None
 
 
+def _private_checker_root() -> pathlib.Path | None:
+    """Use only the Hub's validated, organizer-only capture context."""
+    try:
+        private_diagnostics = importlib.import_module(
+            "qfbench2_common.private_diagnostics"
+        )
+    except ImportError:
+        return None  # Older toolkits retain existing behavior.
+    root = private_diagnostics.directory()
+    return pathlib.Path(root) if root is not None else None
+
+
+def _save_private_checker_diagnostics(
+    unit_dir: pathlib.Path,
+    report_path: pathlib.Path,
+    process: subprocess.CompletedProcess[str] | subprocess.TimeoutExpired,
+) -> None:
+    root = _private_checker_root()
+    if root is None:
+        return
+    target = root / (hashlib.sha256(unit_dir.name.encode()).hexdigest() + "-checker")
+    target.mkdir(mode=0o700, exist_ok=True)
+    for name, content in (
+        ("stdout.log", process.stdout),
+        ("stderr.log", process.stderr),
+    ):
+        data = content if isinstance(content, bytes) else (content or "").encode()
+        (target / name).write_bytes(data)
+        (target / name).chmod(0o600)
+    if report_path.is_file():
+        shutil.copyfile(report_path, target / "junit.xml")
+        (target / "junit.xml").chmod(0o600)
+    metadata = {
+        "unit_handle": unit_dir.name,
+        "timed_out": isinstance(process, subprocess.TimeoutExpired),
+        "returncode": getattr(process, "returncode", None),
+        "junit_present": (target / "junit.xml").is_file(),
+    }
+    (target / "status.json").write_text(json.dumps(metadata), encoding="utf-8")
+    (target / "status.json").chmod(0o600)
+
+
 def _run_trusted_checks(
     unit_dir: pathlib.Path, output_dir: pathlib.Path, timeout_sec: float = 900.0
 ) -> tuple[bool, dict[str, Any]]:
@@ -1053,24 +1097,39 @@ def _run_trusted_checks(
             _present_output_at(present_at, output_dir),
         ):
             report_path = pathlib.Path(scratch) / "junit.xml"
-            proc = subprocess.run(  # noqa: S603 - fixed argv, no shell
-                [
-                    sys.executable,
-                    "-m",
-                    "pytest",
-                    str(checks),
-                    "-q",
-                    "--no-header",
-                    "-p",
-                    "no:cacheprovider",
-                    f"--junitxml={report_path}",
-                ],
-                capture_output=True,
-                text=True,
-                timeout=timeout_sec,
-                env=env,
-                cwd=str(unit_dir),
-            )
+            try:
+                proc = subprocess.run(  # noqa: S603 - fixed argv, no shell
+                    [
+                        sys.executable,
+                        "-m",
+                        "pytest",
+                        str(checks),
+                        "-q",
+                        "--no-header",
+                        "-p",
+                        "no:cacheprovider",
+                        f"--junitxml={report_path}",
+                        *(
+                            [
+                                "-o",
+                                "junit_logging=all",
+                                "-o",
+                                "junit_log_passing_tests=true",
+                            ]
+                            if _private_checker_root() is not None
+                            else []
+                        ),
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=timeout_sec,
+                    env=env,
+                    cwd=str(unit_dir),
+                )
+            except subprocess.TimeoutExpired as exc:
+                _save_private_checker_diagnostics(unit_dir, report_path, exc)
+                raise
+            _save_private_checker_diagnostics(unit_dir, report_path, proc)
             counts: dict[str, int] = {}
             if proc.returncode not in _HARNESS_FAULT_EXIT_CODES:
                 try:
@@ -1210,6 +1269,7 @@ def _g3_domain_semantics(ctx: dict[str, Any]) -> GateResult:
             with (sink / "track1_checker_counts.jsonl").open(
                 "a", encoding="utf-8"
             ) as output:
+                (sink / "track1_checker_counts.jsonl").chmod(0o600)
                 output.write(json.dumps(record, allow_nan=False, sort_keys=True) + "\n")
         except OSError as exc:
             raise OrganizerFault(
