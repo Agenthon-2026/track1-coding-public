@@ -266,35 +266,29 @@ def _g2_cutoff_resource(ctx: dict[str, Any]) -> GateResult:
 #
 #   1. Pytest result (binary)  →  pass/fail admission.
 #      If pytest exits non-zero, the attempt is inadmissible.
-#      The failure label is assigned based on the pytest JSON report.
+#      The failure label is assigned from the grader-owned JUnit report.
 #
 #   2. DI verifier (diagnostic)  →  labels only, no reward change.
-#      After g3 clears (pytest passed), a lightweight DI pass reads the
-#      pytest JSON report and assigns granular T1_* labels to partially
-#      correct attempts.  These labels feed the failure-map JSONL but
+#      The diagnostic overlay reads the same trusted JUnit result and
+#      assigns granular T1_* labels to failed attempts.  These labels feed the failure-map JSONL but
 #      do NOT change the score (which remains 1.0 for an admissible attempt).
 #
 # ---------------------------------------------------------------------------
 
 
-def _classify_pytest_failure(report_path: pathlib.Path) -> FailureLabel:
-    """Map pytest test names / nodeids to T1 failure labels.
+def _classify_trusted_failures(cases: list[ET.Element]) -> FailureLabel | None:
+    """Classify only failing cases in the grader's private JUnit report.
 
-    Heuristic used by the DI verifier to assign root-cause labels from
-    pytest JSON report test outcome data.
+    Names and assertion text stay in the private checker channel. Only an existing
+    closed failure enum leaves this helper; participant reports are never read.
     """
-    if not report_path.exists():
-        return FailureLabel.T1_WRONG_NUMERIC  # conservative default
-
-    try:
-        report = json.loads(report_path.read_text())
-    except Exception:
-        return FailureLabel.T1_WRONG_NUMERIC
-
-    failed_tests: list[str] = []
-    for test in report.get("tests", []):
-        if test.get("outcome") in ("failed", "error"):
-            failed_tests.append(test.get("nodeid", ""))
+    failed_tests = [
+        case.get("name", "")
+        for case in cases
+        if case.find("failure") is not None or case.find("error") is not None
+    ]
+    if not failed_tests:
+        return None
 
     # Map test name patterns to failure labels.
     # Order matters: more specific patterns take precedence.
@@ -315,7 +309,9 @@ def _classify_pytest_failure(report_path: pathlib.Path) -> FailureLabel:
     ]
 
     for test_id in failed_tests:
-        test_lower = test_id.lower()
+        # Parametrized IDs can contain participant output. The test function name
+        # is grader-owned; the bracketed instance label is not a diagnostic authority.
+        test_lower = test_id.split("[", 1)[0].lower()
         for keyword, label in label_rules:
             if keyword in test_lower:
                 return label
@@ -1131,6 +1127,7 @@ def _run_trusted_checks(
                 raise
             _save_private_checker_diagnostics(unit_dir, report_path, proc)
             counts: dict[str, int] = {}
+            failure_label: FailureLabel | None = None
             if proc.returncode not in _HARNESS_FAULT_EXIT_CODES:
                 try:
                     cases = list(ET.parse(report_path).iter("testcase"))
@@ -1141,6 +1138,7 @@ def _run_trusted_checks(
                 failed = sum(case.find("failure") is not None for case in cases)
                 errored = sum(case.find("error") is not None for case in cases)
                 skipped = sum(case.find("skipped") is not None for case in cases)
+                failure_label = _classify_trusted_failures(cases)
                 counts = {
                     "checks_run": len(cases) - skipped,
                     "checks_passed": len(cases) - failed - errored - skipped,
@@ -1182,6 +1180,7 @@ def _run_trusted_checks(
     return proc.returncode == 0, {
         "trusted_checks": "ran",
         "pytest_returncode": proc.returncode,
+        "failure_label": failure_label.value if failure_label else None,
         **counts,
         "output_presented_at": present_at,
         "tail": (proc.stdout or proc.stderr or "")[-400:],
@@ -1207,7 +1206,6 @@ def _g3_domain_semantics(ctx: dict[str, Any]) -> GateResult:
     # participant container normally cannot write it, and its absence means nothing. Present
     # and unparseable is still refused: a malformed claim is a malformed output.
     reward_path = output_dir / "reward.json"
-    report_path = output_dir / "pytest_report.json"
 
     reward: float | None = None
     payload: dict[str, Any] = {}
@@ -1222,26 +1220,6 @@ def _g3_domain_semantics(ctx: dict[str, Any]) -> GateResult:
                 detail={"error": f"reward.json parse error: {exc}"},
             )
 
-    # --- DI label overlay (diagnostic pass, admissible attempts only) ---
-    # Classifies root-cause even when reward=1.0 to capture partially-correct
-    # admissible solutions (e.g., correct price but sign-flipped theta).
-    di_label: FailureLabel | None = None
-    if reward is not None and reward < 1.0:
-        di_label = _classify_pytest_failure(report_path)
-    elif di_label_only:
-        # For admissible attempts: run classification on any non-fatal warnings
-        # in the pytest report (outcome="passed" with warnings may still
-        # signal a T1_CONVENTION_ERROR via xfail or custom marks).
-        di_label = _classify_pytest_failure(report_path)
-
-    if di_label_only:
-        # DI overlay: do not gate, just annotate.  Always "passes" this phase.
-        return GateResult(
-            passed=True,
-            label=di_label,
-            detail={"di_label": di_label.value if di_label else None, "reward": reward},
-        )
-
     # --- Binary admission decision: the GRADER's checks, never the submission's claim ---
     #
     # `reward.json` is written by the submission's own container when it can (Harbor); under
@@ -1253,6 +1231,16 @@ def _g3_domain_semantics(ctx: dict[str, Any]) -> GateResult:
     # deliverables, which is what `test.sh` was always meant to do and what nothing here did.
     unit_dir = pathlib.Path(ctx.get("unit_dir", "."))
     trusted_ok, trusted = _run_trusted_checks(unit_dir, output_dir)
+    label_value = trusted.get("failure_label")
+    di_label = FailureLabel(label_value) if label_value is not None else None
+    if di_label_only:
+        # The legacy diagnostic overlay does not gate, but it still runs the trusted
+        # checker. A participant-written report cannot select its diagnostic label.
+        return GateResult(
+            passed=True,
+            label=di_label,
+            detail={"di_label": label_value, "reward": reward},
+        )
     if ctx.get("operator_sink") is not None:
         sink = pathlib.Path(ctx["operator_sink"])
         record = {
