@@ -206,11 +206,19 @@ option on `qfbench2 smoke`; the first Docker command above runs the agent.
 
 ### 7. Submit to the leaderboard
 
-Push your Docker image to a container registry (e.g. Docker Hub, AWS ECR) and register the
-image URL on the track's CodaBench competition page. The submission interface and the full
-submission instructions are published there; the competition page link is announced on the
-competition website and in the participant announcements, and `SUBMISSION_CLI.md` in this repo
-documents the image contract the page expects.
+Push your `linux/amd64` image to a registry that allows anonymous pulls by digest, write
+`submission.json` with that digest, and pack the upload with the toolkit:
+
+```bash
+qfbench2 submission pack --descriptor submission.json --team-number <your team number> --out submission.zip
+```
+
+Then upload `submission.zip` on the track's CodaBench competition page from your team's
+designated CodaBench account. The page link was issued to registered teams at the Development
+opening and is in the participant announcements. `SUBMISSION_CLI.md` in this repo documents the
+image contract and the upload mechanics ("How an upload is made"), and the hub's
+[team-claim guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.3/starter-packs/track1/TEAM-CLAIM.md)
+explains the `team-claim.json` the zip carries.
 
 ---
 
