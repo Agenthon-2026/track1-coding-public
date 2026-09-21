@@ -14,6 +14,9 @@ import pytest
 OUTPUT_DIR = Path("/app/output")
 REF_DIR = Path("/tests/reference_data")
 
+# Organizer-only input schema, checked before participant-output grading.
+T1_REFERENCE_FORMATS = {"expected.json": "deliverables"}
+
 LEVELS = ["99", "995", "999"]
 METHODS = ["historical", "normal", "evt", "garch_evt"]
 BACKTEST_STATS = [

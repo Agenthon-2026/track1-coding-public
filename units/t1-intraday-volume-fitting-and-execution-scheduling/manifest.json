@@ -28,6 +28,58 @@
       "public_release_date": "2026-07-20",
       "redistributable": true,
       "pii_stripped": true
+    },
+    {
+      "path": "checks/reference_data/best_model.json",
+      "role": "reference",
+      "source": "Existing organizer practice reference; unchanged bytes",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "9a3f926e3208eeba8accdc7368847aaffaea97c53bc628f62a871072f1721b80",
+      "bytes": 95,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "checks/reference_data/excluded_days.csv",
+      "role": "reference",
+      "source": "Existing organizer practice reference; unchanged bytes",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "5ee58ec9024a296df73ad201382533ae4d041e066071a2411687ba3602514816",
+      "bytes": 38,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "checks/reference_data/final_schedule.csv",
+      "role": "reference",
+      "source": "Existing organizer practice reference; unchanged bytes",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "6aebe488845bcd646094334620ff8893eb2f17e06e84beba9de6e697b7a68f1f",
+      "bytes": 3072,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "checks/reference_data/model_performance.csv",
+      "role": "reference",
+      "source": "Existing organizer practice reference; unchanged bytes",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "38bf937e51c6e9119a254c421897855f52cf7a4c8702646e929e8eff65218ed7",
+      "bytes": 210,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
     }
   ],
   "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."

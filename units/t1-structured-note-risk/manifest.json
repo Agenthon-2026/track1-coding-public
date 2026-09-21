@@ -41,6 +41,71 @@
       "public_release_date": "2026-07-20",
       "redistributable": true,
       "pii_stripped": true
+    },
+    {
+      "path": "checks/reference_data/alt_paths.json",
+      "role": "reference",
+      "source": "Existing organizer practice reference; unchanged bytes",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "d8deebc5a568ab5beb7c728653d6f2ee2f793785fd6373a5e435228c9ba4914c",
+      "bytes": 12209,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "checks/reference_data/bridges.json",
+      "role": "reference",
+      "source": "Existing organizer practice reference; unchanged bytes",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "c5ee6810672dce126f89da02e38b26fd822401c502fd9fc5b77b86963669c1e4",
+      "bytes": 462,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "checks/reference_data/checkpoints.json",
+      "role": "reference",
+      "source": "Existing organizer practice reference; unchanged bytes",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "b69581be21f86bb6d6931afecabd696b600564aa256ce8e44b23cc1f67757134",
+      "bytes": 2390,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "checks/reference_data/concept_graph.json",
+      "role": "reference",
+      "source": "Existing organizer practice reference; unchanged bytes",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "e9f23ef5c23c6b1b5f7a1a6fb543699260477a608d16fcebc95c55e664002275",
+      "bytes": 1946,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "checks/reference_data/expected.json",
+      "role": "reference",
+      "source": "Existing organizer practice reference; unchanged bytes",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "a724c41e4f445b52cc6b0c46ec4aa337076648cb1fde3dbb532955e17164c23c",
+      "bytes": 2772,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
     }
   ],
   "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."

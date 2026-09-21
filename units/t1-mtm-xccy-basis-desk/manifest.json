@@ -54,6 +54,32 @@
       "public_release_date": "2026-07-20",
       "redistributable": true,
       "pii_stripped": true
+    },
+    {
+      "path": "checks/reference_data/checkpoints.json",
+      "role": "reference",
+      "source": "Existing organizer practice reference; unchanged bytes",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "de981c151448553cea49ca96dad9fcdbbf65d516c66fed1b272b8f04bf745bc4",
+      "bytes": 3848,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
+    },
+    {
+      "path": "checks/reference_data/expected.json",
+      "role": "reference",
+      "source": "Existing organizer practice reference; unchanged bytes",
+      "license": "CC-BY-NC-4.0",
+      "sha256": "38d0306fe8337d2aae8b66822c904b1f93ed3747fcae79548572cf116738ec57",
+      "bytes": 3287,
+      "split": "public-dev",
+      "cutoff": "",
+      "public_release_date": "2026-07-20",
+      "redistributable": true,
+      "pii_stripped": true
     }
   ],
   "notes": "Auto-generated during v1->v2 migration. Public practice pool. Review license/cutoff for real-data tasks."

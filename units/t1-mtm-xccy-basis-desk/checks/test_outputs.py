@@ -11,6 +11,11 @@ import pytest
 
 OUTPUT_DIR = Path(os.environ.get("OUTPUT_DIR", "/output"))
 REF_DIR = Path(__file__).resolve().parent / "reference_data"
+# Organizer-only input schemas, checked before participant-output grading.
+T1_REFERENCE_FORMATS = {
+    "expected.json": "deliverables",
+    "checkpoints.json": "checkpoints",
+}
 INPUT_DIR = Path(os.environ.get("DATA_DIR", "/app/data"))
 if not INPUT_DIR.exists():
     INPUT_DIR = Path(__file__).resolve().parents[1] / "environment" / "data"

@@ -1,8 +1,19 @@
 """Synthetic public-path regression: execute real pytest checks, never task answers."""
 
+import hashlib
+import json
+
 import pytest
 from qfbench2_common.contracts import OrganizerFault
 from qfbench2_track_coding import scoring
+
+
+def reference_manifest(unit):
+    files = [
+        {"path": p.relative_to(unit).as_posix(), "sha256": hashlib.sha256(p.read_bytes()).hexdigest()}
+        for p in (unit / "checks/reference_data").iterdir() if p.is_file()
+    ]
+    (unit / "manifest.json").write_text(json.dumps({"files": files}))
 
 
 def synthetic_unit(tmp_path, monkeypatch, *, reference=False, copy="COPY data/ /app/"):
@@ -26,6 +37,8 @@ def synthetic_unit(tmp_path, monkeypatch, *, reference=False, copy="COPY data/ /
         data = unit / "environment/data"
         target = mount / ("data/params.txt" if "/app/data/" in copy else "params.txt")
     (data / "params.txt").write_text("synthetic-value")
+    if reference:
+        reference_manifest(unit)
     (output / "answer.txt").write_text("synthetic-value")
     (unit / "checks/test_outputs.py").write_text(
         "import os, pathlib\n"
@@ -168,6 +181,7 @@ def test_fstring_checks_real_reference_directory_not_literal_fragment(
     unit, output, target = synthetic_unit(tmp_path, monkeypatch, reference=True)
     reference = unit / "checks/reference_data"
     (reference / "step_1.txt").write_text("synthetic-value")
+    reference_manifest(unit)
     (unit / "checks/test_outputs.py").write_text(
         "import os, pathlib\n"
         'OUTPUT_DIR = pathlib.Path(os.environ["OUTPUT_DIR"])\n'
@@ -253,5 +267,5 @@ def test_unused_read_result_still_requires_its_input(tmp_path, monkeypatch):
         f"UNUSED_RESULT = pathlib.Path({str(target)!r}).read_text()\n"
         "def test_result():\n    assert True\n"
     )
-    with pytest.raises(OrganizerFault, match="organizer input"):
+    with pytest.raises(OrganizerFault, match="organizer reference"):
         scoring._run_trusted_checks(unit, output)

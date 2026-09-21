@@ -64,7 +64,9 @@ from qfbench2_common.leakage import scan_tree
 from qfbench2_common.manifest import verify_manifest
 from qfbench2_common.scoring.passk import pass_at_k, suite_summary  # noqa: F401 (re-exported)
 from qfbench2_common.scoring.bootstrap import bootstrap_ci  # noqa: F401 (re-exported)
-from qfbench2_common.verifier import Gate, GateResult, HierarchicalVerifier
+from qfbench2_common.verifier import Gate, GateResult, HierarchicalVerifier, Verdict
+
+from qfbench2_track_coding.checker_references import reference_input_guard
 
 #: The scorer version, SHARED BY ALL FOUR TRACKS and bumped together (owner ruling 2026-09-11).
 #:
@@ -101,6 +103,7 @@ def _g0_integrity(ctx: dict[str, Any]) -> GateResult:
         image_hash (str, optional): sha256 of the submission image (logged).
     """
     unit_dir = pathlib.Path(ctx["unit_dir"])
+    _preflight_reference_inputs(unit_dir)
     errs = verify_manifest(unit_dir)
     if errs:
         return GateResult(
@@ -897,6 +900,43 @@ def _input_presentations(
 
 
 @contextlib.contextmanager
+def _guard_reference_inputs(
+    unit_dir: pathlib.Path, source: str | None = None
+) -> Iterator[None]:
+    """Organizer reference faults take precedence over participant-output grading."""
+    if source is None:
+        checks = unit_dir / "checks" / _CHECKS_ENTRY
+        if not checks.is_file():
+            # This unit cannot judge any submission. Attribute the known organizer fault
+            # before an unrelated early participant gate can conceal it.
+            raise OrganizerFault(
+                "the Track 1 scorer found no grader-owned checks file; "
+                "organizer checks are required before a participant verdict"
+            )
+        else:
+            try:
+                source = checks.read_text()
+            except (OSError, UnicodeError):
+                raise OrganizerFault(
+                    "the Track 1 organizer checks are unreadable"
+                ) from None
+    named = _checker_input_paths(source)
+    required = any(
+        name == _REFERENCE_INPUT_ROOT or name.startswith(_REFERENCE_INPUT_ROOT + "/")
+        for name in named
+    )
+    with reference_input_guard(unit_dir, source, required=required):
+        yield
+
+
+def _preflight_reference_inputs(
+    unit_dir: pathlib.Path, source: str | None = None
+) -> None:
+    with _guard_reference_inputs(unit_dir, source):
+        pass
+
+
+@contextlib.contextmanager
 def _present_input_file(target: pathlib.Path, data: pathlib.Path) -> Iterator[None]:
     """Create exactly one absent input file; never replace an existing host entry."""
     created_parents = []
@@ -1007,6 +1047,15 @@ def _save_private_checker_diagnostics(
 
 def _run_trusted_checks(
     unit_dir: pathlib.Path, output_dir: pathlib.Path, timeout_sec: float = 900.0
+) -> tuple[bool, dict[str, Any]]:
+    """Bind organizer references before validation through every checker exit path."""
+    unit_dir = pathlib.Path(unit_dir).resolve()
+    with _guard_reference_inputs(unit_dir):
+        return _execute_trusted_checks(unit_dir, output_dir, timeout_sec)
+
+
+def _execute_trusted_checks(
+    unit_dir: pathlib.Path, output_dir: pathlib.Path, timeout_sec: float
 ) -> tuple[bool, dict[str, Any]]:
     """Run the unit's grader-owned checks against the submission's output.
 
@@ -1319,6 +1368,17 @@ def _t1_scorer(ctx: dict[str, Any]) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
+class _ReferenceBoundVerifier(HierarchicalVerifier):
+    def run(self, ctx: dict[str, Any]) -> Verdict:
+        # Keep the same binding across all gates, including early output failures and the
+        # interval between g0 and pytest. The shared verifier still owns gate/scoring order.
+        bound_ctx = dict(ctx)
+        unit_dir = pathlib.Path(ctx["unit_dir"]).resolve()
+        bound_ctx["unit_dir"] = unit_dir
+        with _guard_reference_inputs(unit_dir):
+            return super().run(bound_ctx)
+
+
 def build_verifier(ctx: dict[str, Any]) -> HierarchicalVerifier:
     """Construct the T1 HierarchicalVerifier for one evaluation attempt.
 
@@ -1368,7 +1428,7 @@ def build_verifier(ctx: dict[str, Any]) -> HierarchicalVerifier:
         ("g2_cutoff_resource", _g2_cutoff_resource),
         ("g3_domain_semantics", _g3_domain_semantics),
     ]
-    return HierarchicalVerifier(gates=gates, scorer=_t1_scorer)
+    return _ReferenceBoundVerifier(gates=gates, scorer=_t1_scorer)
 
 
 def scorer_identity() -> dict[str, str]:
