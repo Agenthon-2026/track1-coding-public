@@ -152,15 +152,16 @@ server or change the adapter eligibility rules above.
 4. **Pin temperature/seed** where the API supports it. Entries are verified
    *statistically* (bootstrap-CI overlap on organizer rerun for T2/T3/T4; for T1, the single-pass
    per-unit verdicts must agree exactly).
-5. **House API allocation.** The input allowance is **1,000,000 input tokens per unit**.
-   The selected House allowance is **25 admitted requests per unit**, with **at most 4,000
-   output tokens per call**. Omitted output limits use 4,000; larger limits are reduced to
-   4,000, and smaller valid limits are preserved. Multiple generated alternatives are refused.
-   An admitted request is charged before forwarding: upstream failures or a lost response do
-   not refund it. An admitted participant or SDK retry can consume another slot, even with the
-   same content. Invalid requests refused before admission do not consume a slot. Keep track
-   of input use and budget automatic retries. Platform availability and deployment status
-   will be announced separately.
+5. **House API allocation — the budget is requests per unit.** The House allowance is
+   **25 admitted requests per unit**, with **at most 4,000 output tokens per call**; both are
+   counted and applied by the House route. Omitted output limits use 4,000; larger limits are
+   reduced to 4,000, and smaller valid limits are preserved. Multiple generated alternatives are
+   refused. **There is no per-unit token allowance** — the earlier figure of 1,000,000 input plus
+   100,000 output tokens per unit is withdrawn and nothing replaces it. An admitted request is
+   charged before forwarding: upstream failures or a lost response do not refund it. An admitted
+   participant or SDK retry can consume another slot, even with the same content. Invalid requests
+   refused before admission do not consume a slot. Budget automatic retries. Platform availability
+   and deployment status will be announced separately.
 
 **One leaderboard.** All categories rank on a single board; every entry is tagged with its
 category, the models used (pinned versions), and their training cutoffs.

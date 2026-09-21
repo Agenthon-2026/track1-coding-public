@@ -302,10 +302,11 @@ supply answers or a mock solve. Runtime depends on your agent and the selected t
    models and adapters are not part of this competition** (ruling of 2026-09-18); the former
    `byo-large` / `byo-small` values are invalid since toolkit 2.4.3, and an upload that still
    carries one is held and never run. Every entry is tagged with its category, pinned models,
-   and training cutoffs. See [`SUBMISSION_CLI.md`](SUBMISSION_CLI.md). The existing allowance is
-   **1,000,000 input + 100,000 output tokens per unit**.
-   House use is limited to **25 admitted requests per unit**, with **at most 4,000 output tokens
-   per request**; admitted failures and retries count. See the
+   and training cutoffs. See [`SUBMISSION_CLI.md`](SUBMISSION_CLI.md). **The model budget is
+   requests per unit:** House use is limited to **25 admitted requests per unit**, with **at most
+   4,000 output tokens per request**, both counted by the House route; admitted failures and
+   retries count. There is no per-unit token allowance — the earlier figure of 1,000,000 input
+   plus 100,000 output tokens per unit is withdrawn and nothing replaces it. See the
    [request-accounting rules](SUBMISSION_CLI.md#rules-for-model-api-use-restricted-mode).
 2. **Docker image.** CLI verb: `solve --task-dir /input --out /app/output`.
 3. **Time limit.** Per task, declared by `[agent].timeout_sec` in that unit's card; the card is
@@ -380,6 +381,8 @@ If you ever find any of the above in this repo, report it immediately to
 Development runs through **October 12, 2026**. The joint **Final + Verification phase runs
 October 13–25, 2026**. Each team makes **one final submission per track**; organizers perform
 verification within that same phase, with no separate participant Verification submission.
+If two Final submissions finish this track with the same ranking score, the tie is broken in
+favour of the one uploaded earlier.
 Registration and Development close together on October 12, 2026 at **23:59 Anywhere on Earth (AoE, UTC−12)**. The joint Final + Verification phase closes on October 25, 2026 at **23:59 AoE**. Other competition dates and task/data cutoffs are unchanged.
 
 At the participant Development opening, Track 1 allows **1 upload per team per day**
