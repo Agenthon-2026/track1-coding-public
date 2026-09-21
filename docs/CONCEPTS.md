@@ -238,19 +238,20 @@ mine: if it appears somewhere it should not, something is wrong.
 
 The canary does two jobs:
 
-1. **Contamination detection.** If an AI agent's output contains the canary GUID of a task,
-   it suggests the agent was trained on data that included the task's card — it might have
-   "memorized" the task rather than solving it. This triggers a `CONTAMINATION_CANARY`
-   disqualification label.
+1. **Contamination detection.** If an AI agent's output contains any canary GUID from
+   the registry — any task's, not only the one being solved — it suggests the agent reproduced
+   task material rather than solving the task, whether that material came from training data that
+   included the cards or from something the image carried in. This triggers a
+   `CONTAMINATION_CANARY` disqualification label.
 2. **Uniqueness enforcement.** CI checks that no two tasks share a canary GUID; every task
    must have its own fresh UUID4.
 
 The canary is visible in `card.toml` (the public task description), but the checker scans the
-*output files* for it. An agent that correctly solves a task from scratch will never emit the
-canary in its output.
+*output files* for every registered canary. An agent that correctly solves a task from scratch
+will never emit one.
 
 **Canary string in one sentence:** a unique random ID in each task's metadata; if the agent
-outputs it, it flags potential memorization (training data contamination).
+outputs any of them, it flags potential memorization or copied task material.
 
 ---
 

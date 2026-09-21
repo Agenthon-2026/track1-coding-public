@@ -329,6 +329,13 @@ supply answers or a mock solve. Runtime depends on your agent and the selected t
    (pass@3 with bootstrap CIs exists only in the offline Harbor report.)
 6. **Baseline.** None. Entries are ranked against each other on pass@1 over the `private-test` split.
 7. **Data cutoff.** Each task card declares a `data_cutoff`; agents must not use data beyond it.
+8. **Your own solutions to public units may travel in your image.** An image may carry your
+   team's own solutions to public Development units and use them as in-context examples when it
+   solves other units — that is part of the prompts/harness, in Development and in the Final
+   alike. The canary rule is unchanged: the g2 gate flags any canary GUID from the registry that
+   appears in an agent's output file, not only the target unit's, and that is a
+   `CONTAMINATION_CANARY` disqualification. If you carry unit material, it is on you that no
+   canary from it reaches an output.
 
 **Where the full rules live.** There is no separate rules website. The rules that bind a Track 1
 submission are the seven points above, plus:
