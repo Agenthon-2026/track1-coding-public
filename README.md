@@ -315,6 +315,12 @@ supply answers or a mock solve. Runtime depends on your agent and the selected t
    at 5400. `[verifier].timeout_sec` (the checker's budget, after your agent exits) and
    `[environment].build_timeout_sec` (the image build) are separate fields with their own values;
    do not read either as the agent's limit.
+   **A run also has ONE total wall-clock allowance for the whole roster** — the platform's
+   ingestion-stage clock, 12 hours in Development (about 8 minutes per unit across 87 units), and
+   it is the binding limit, because the per-unit ceilings do not all fit inside it. Units your run
+   does not reach before it ends are scored as not passed; see rule 5. The
+   [Development runtime guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.3/docs/DEVELOPMENT-RUNTIME.md)
+   ("Execution clocks") has the numbers.
 4. **Resources.** A 16-CPU quota, 128 GiB RAM, and GPU access for permitted local code.
    Every unit card declares this in `[environment]` (`cpus = 16`, `memory = "128G"`, `gpu = true`); the card is authoritative.
    The `api` category does not remove its GPU grant. See the
@@ -327,6 +333,9 @@ supply answers or a mock solve. Runtime depends on your agent and the selected t
    actual ingestion-stage time cap its fixed end; restart/retry does not renew the window or
    counters. Deployment and verification remain required before opening; no compute grant grows.
 5. **Metric.** Mean pass@1, one execution per task, fixed denominator, no confidence interval.
+   A wrong, crashed, timed-out or missing output stays in the denominator as zero, and so does a
+   unit your run never reached because the total wall-clock allowance in rule 3 ran out (reason
+   code `not_reached`): the run is scored over the whole roster on what it managed to run.
    (pass@3 with bootstrap CIs exists only in the offline Harbor report.)
 6. **Baseline.** None. Entries are ranked against each other on pass@1 over the `private-test` split.
 7. **Data cutoff.** Each task card declares a `data_cutoff`; agents must not use data beyond it.
