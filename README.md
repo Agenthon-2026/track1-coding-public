@@ -319,7 +319,7 @@ supply answers or a mock solve. Runtime depends on your agent and the selected t
    ingestion-stage clock, 12 hours in Development (about 8 minutes per unit across 87 units), and
    it is the binding limit, because the per-unit ceilings do not all fit inside it. Units your run
    does not reach before it ends are scored as not passed; see rule 5. The
-   [Development runtime guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.3/docs/DEVELOPMENT-RUNTIME.md)
+   [Development runtime guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/main/docs/DEVELOPMENT-RUNTIME.md)
    ("Execution clocks") has the numbers.
 4. **Resources.** A 16-CPU quota, 128 GiB RAM, and GPU access for permitted local code.
    Every unit card declares this in `[environment]` (`cpus = 16`, `memory = "128G"`, `gpu = true`); the card is authoritative.
