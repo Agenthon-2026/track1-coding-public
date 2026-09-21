@@ -49,9 +49,9 @@ docker run --rm --network qfb2-eval \
 ```
 
 Note the **two binds of the same host directory**. Track 1 units are split between the two
-spellings — 64 of 87 `instruction.md` tell the agent `/app/output` (the QFBench/Harbor
-convention this track inherits), 23 say `/output` — so the harness binds both to one place and
-either is captured. Write to whichever your unit's `instruction.md` names; nothing you write to
+spellings — 81 of the 86 `instruction.md` name `/app/output` (the QFBench/Harbor
+convention this track inherits) and 6 name `/output`, one unit naming both — so the harness binds
+both to one place and either is captured. Write to whichever your unit's `instruction.md` names; nothing you write to
 either path is lost. A path outside those two is written into your container's own filesystem
 and discarded by `--rm`. See [`SUBMISSION_CLI.md`](../SUBMISSION_CLI.md), invariant 8.
 
