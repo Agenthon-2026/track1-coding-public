@@ -48,7 +48,7 @@ limits:
 - **CPU, memory and GPU limits.** 16 vCPUs, 128 GB RAM, GPU available — as declared in each
   unit card's `[environment]` block (`cpus`, `memory`, `gpu`), which is authoritative.
 - **Time limit.** Wall-clock seconds per task, declared per unit by `[agent].timeout_sec` in the
-  card, which is authoritative. It is not the same for every unit: across the 87 public units it
+  card, which is authoritative. It is not the same for every unit: across the 86 public units it
   ranges from 1200 to 5400 seconds, most commonly 1800. `[verifier].timeout_sec` and
   `[environment].build_timeout_sec` are different fields — the checker's budget and the image
   build — and neither is the agent's limit.
