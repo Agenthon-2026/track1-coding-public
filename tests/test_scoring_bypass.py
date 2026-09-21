@@ -672,10 +672,12 @@ class TestThePlatformTopology:
             assert scores["primary"] == primary, scores
             assert scores["n_scored"] == n_scored and scores["n_participant_failure"] == n_fail
             assert scores["n_organizer_failure"] == 0
-            # `failure_map.jsonl` is written only when a unit failed; nothing else may be there.
+            # The Hub also writes its HTML report; failure_map exists only for failed units.
             left = {p.name for p in outp.iterdir()}
             assert {"details.jsonl", "scores.json"} <= left
-            assert left <= {"details.jsonl", "failure_map.jsonl", "scores.json"}, (
+            assert left <= {
+                "details.jsonl", "failure_map.jsonl", "scores.json", "detailed_results.html"
+            }, (
                 "the scorer left something in the scoring output root"
             )
 

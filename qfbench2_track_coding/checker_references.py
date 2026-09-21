@@ -304,8 +304,8 @@ def validate_reference_inputs(
     """Check the immutable organizer reference envelope, before inspecting output.
 
     The shared manifest implementation owns path safety, file kinds, hashes and exact
-    coverage. A filtered view scopes this preflight to reference data, so other manifest
-    failures retain their existing gate behavior. Every declared reference is required,
+    coverage. A filtered view scopes this preflight to reference data; g0 separately
+    verifies the full organizer manifest. Every declared reference is required,
     including a reference marked non-redistributable in a sealed organizer dataset.
     """
     reference = unit_dir / _REFERENCE

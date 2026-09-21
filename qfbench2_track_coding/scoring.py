@@ -104,12 +104,18 @@ def _g0_integrity(ctx: dict[str, Any]) -> GateResult:
     """
     unit_dir = pathlib.Path(ctx["unit_dir"])
     _preflight_reference_inputs(unit_dir)
-    errs = verify_manifest(unit_dir)
+    try:
+        # unit_dir is the organizer's unit, not output_dir. Keep this boundary around
+        # its canonical manifest check only: participant parsers retain their verdicts.
+        errs = verify_manifest(unit_dir)
+    except (OSError, ValueError, TypeError, RecursionError):
+        # Parser/path diagnostics can contain sealed organizer material.
+        raise OrganizerFault(
+            "the Track 1 organizer manifest could not be verified"
+        ) from None
     if errs:
-        return GateResult(
-            passed=False,
-            label=FailureLabel.INTEGRITY_BAD_MANIFEST,
-            detail={"manifest_errors": errs},
+        raise OrganizerFault(
+            "the Track 1 organizer manifest failed integrity verification"
         )
     # Interface version check: card.toml schema_version must be "2.0".
     try:

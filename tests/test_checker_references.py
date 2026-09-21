@@ -108,6 +108,127 @@ def output_variant(output, variant):
             p.unlink()
 
 
+@pytest.fixture
+def plain_manifest_unit(tmp_path):
+    """A plain pytest unit has no reference_data guard to parse its root manifest."""
+    unit, output = tmp_path / "plain-unit", tmp_path / "plain-output"
+    (unit / "checks").mkdir(parents=True)
+    (unit / "environment/data").mkdir(parents=True)
+    output.mkdir()
+    (unit / "checks/test_outputs.py").write_text(
+        "import os\nfrom pathlib import Path\n"
+        'OUTPUT_DIR = Path(os.environ["OUTPUT_DIR"])\n'
+        "def test_synthetic_deliverable():\n"
+        '    assert (OUTPUT_DIR / "answer.txt").read_text() == "synthetic correct"\n'
+    )
+    (unit / "card.toml").write_text('schema_version = "2.0"\n')
+    source = unit / "environment/data/input.txt"
+    source.write_text("Synthetic organizer input.\n")
+    (unit / "manifest.json").write_text(
+        json.dumps(
+            {
+                "files": [
+                    {
+                        "path": "environment/data/input.txt",
+                        "sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+                        "role": "input",
+                        "redistributable": True,
+                    }
+                ]
+            }
+        )
+    )
+    (output / "answer.txt").write_text("synthetic correct")
+    return unit, output
+
+
+@pytest.mark.parametrize(
+    "corruption",
+    [
+        "malformed_json",
+        "nested_json",
+        "invalid_utf8",
+        "null",
+        "number",
+        "array",
+        "array_with_files",
+        "missing_files",
+        "wrong_files_type",
+        "missing",
+        "unreadable",
+        "checksum",
+        "missing_manifested_input",
+    ],
+)
+def test_plain_organizer_manifest_fault_is_not_participant_output(
+    plain_manifest_unit, monkeypatch, corruption
+):
+    unit, output = plain_manifest_unit
+    path = unit / "manifest.json"
+    raw = {
+        "malformed_json": b"{synthetic sealed diagnostic must not escape",
+        "nested_json": b"[" * 5000 + b"0" + b"]" * 5000,
+        "invalid_utf8": b"\xff",
+        "null": b"null",
+        "number": b"42",
+        "array": b"[]",
+        "array_with_files": b'["files"]',
+        "missing_files": b"{}",
+        "wrong_files_type": b'{"files": null}',
+    }
+    if corruption in raw:
+        path.write_bytes(raw[corruption])
+    elif corruption == "missing":
+        path.unlink()
+    elif corruption == "unreadable":
+        original = pathlib.Path.read_text
+
+        def read(candidate, *args, **kwargs):
+            if candidate == path:
+                raise PermissionError("synthetic sealed diagnostic must not escape")
+            return original(candidate, *args, **kwargs)
+
+        monkeypatch.setattr(pathlib.Path, "read_text", read)
+    else:
+        data = unit / "environment/data/input.txt"
+        if corruption == "checksum":
+            data.write_text("Changed organizer input; participant bytes untouched.\n")
+        else:
+            data.unlink()
+        # Observe the genuine canonical returned-error path, not a parser stub.
+        assert scoring.verify_manifest(unit)
+    with pytest.raises(OrganizerFault, match="organizer manifest") as caught:
+        verdict(unit, output)
+    assert "synthetic sealed diagnostic" not in str(caught.value)
+    assert (output / "answer.txt").read_text() == "synthetic correct"
+
+
+@pytest.mark.parametrize("variant", ["correct", "wrong", "malformed_reward", "empty"])
+def test_plain_valid_manifest_keeps_participant_verdicts(plain_manifest_unit, variant):
+    unit, output = plain_manifest_unit
+    if variant == "wrong":
+        (output / "answer.txt").write_text("synthetic wrong")
+    elif variant == "malformed_reward":
+        (output / "reward.json").write_text("{malformed participant json")
+    elif variant == "empty":
+        (output / "answer.txt").unlink()
+    result = verdict(unit, output)
+    assert result.admissible is (variant == "correct")
+
+
+def test_manifest_boundary_does_not_capture_participant_parser_errors(
+    plain_manifest_unit, monkeypatch
+):
+    unit, output = plain_manifest_unit
+
+    def participant_parser(ctx):
+        raise ValueError("synthetic participant parsing exception")
+
+    monkeypatch.setattr(scoring, "_g1_schema", participant_parser)
+    with pytest.raises(ValueError, match="participant parsing exception"):
+        verdict(unit, output)
+
+
 def test_real_generic_grader_good_output_passes(generic_unit):
     unit, output = generic_unit
     assert verdict(unit, output).admissible
