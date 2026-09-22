@@ -10,8 +10,9 @@ COPY data/ /app/data/
 
 # Rare task-specific package NOT in the shared base — the documented pattern for genuine extras.
 # (numba is only needed by this task; pin for scoring reproducibility.)
-# numba 0.61.0 is the first release with a cp313 wheel; 0.60.0 refuses to build on the
-# Python 3.13 base this image inherits (reported in track1-coding-public#4).
-RUN pip install --no-cache-dir numba==0.61.0
+# numba 0.61.0 was the first release with a cp313 wheel (0.60.0 refuses to build on the
+# Python 3.13 base this image inherits; track1-coding-public#4). The graded environment runs
+# numba 0.67.0, which supports the base Python 3.13 and NumPy 2.5 stack; the pin matches it.
+RUN pip install --no-cache-dir numba==0.67.0
 
 CMD ["bash", "-c", "echo 'T1 exemplar sandbox ready (finance-bench-sandbox base). Agent writes to /app/output.'"]
