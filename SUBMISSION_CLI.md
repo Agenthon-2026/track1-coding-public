@@ -70,14 +70,15 @@ The Team Key never goes into the zip and is never sent to anyone.
 At the participant Development opening, **Track 1 allows 1 upload per team per day**,
 with **20 total uploads per team for this track during Development**. Upload through your
 team's single designated CodaBench account. Held or cancelled uploads count even when they
-receive no score; local validation and packaging use no attempts. Track 1 has a 1-per-day limit;
+receive no score; local validation and packaging use no attempts. An upload the platform marks
+`Failed` does not consume an attempt — the platform's daily count excludes it. Track 1 has a 1-per-day limit;
 Tracks 2, 3 and 4 retain 5 per day.
 
 Development runs through **October 12, 2026**. The joint **Final + Verification phase runs
 October 13–25, 2026**. Each team makes **one final submission per track**; organizers perform
 verification within that same phase, with no separate participant Verification submission.
 Registration and Development close together on October 12, 2026 at **23:59 Anywhere on Earth (AoE, UTC−12)**. The joint Final + Verification phase closes on October 25, 2026 at **23:59 AoE**. Other competition dates and task/data cutoffs are unchanged.
-See the [Development submission limits](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.3/docs/DEVELOPMENT-RUNTIME.md#submission-limits-at-the-development-opening).
+See the [Development submission limits](https://github.com/Agenthon-2026/Agenthon2026-public/blob/main/docs/DEVELOPMENT-RUNTIME.md#submission-limits-at-the-development-opening).
 
 ## Network modes (per unit card, `[environment].network`)
 

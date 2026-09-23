@@ -388,4 +388,5 @@ Registration and Development close together on October 12, 2026 at **23:59 Anywh
 At the participant Development opening, Track 1 allows **1 upload per team per day**
 and **20 total uploads per team for this track during Development**. Use your team's single
 designated CodaBench account. Local validation and packaging use no attempts; held or cancelled
-uploads still count. See [submission limits](SUBMISSION_CLI.md#development-submission-limits).
+uploads still count. An upload the platform marks `Failed` does not consume an attempt — the platform's
+daily count excludes it. See [submission limits](SUBMISSION_CLI.md#development-submission-limits).
