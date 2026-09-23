@@ -203,6 +203,56 @@ def test_each_unit_names_an_output_directory() -> None:
         )
 
 
+# baselines/README.md states the same split in prose, for participants rather than for CI. It
+# carried "64 of 87 ... 23" from the repository's first commit: wrong before the 2026-09-21 roster
+# withdrawal (it predates the 2026-08-27 relative-path fix) and wrong after it, with nothing
+# asserting it. This pins the sentence to the same measurement the tests above make.
+_README = _REPO / "baselines" / "README.md"
+_README_SPLIT_RE = re.compile(
+    r"(\d+)\s+of\s+the\s+(\d+)\s+`instruction\.md`\s+name\s+`/app/output`"
+    r".*?and\s+(\d+)\s+name\s+`/output`",
+    re.DOTALL,
+)
+
+
+def _instruction_path_census() -> tuple[int, int, int]:
+    """(units, units naming /app/output, units naming /output). A unit may name both."""
+    units = _units()
+    app = sum(1 for u in units if "/app/output" in _OUTPUT_PATH_RE.findall(_read(u / "instruction.md")))
+    bare = sum(1 for u in units if "/output" in _OUTPUT_PATH_RE.findall(_read(u / "instruction.md")))
+    return len(units), app, bare
+
+
+def test_baselines_readme_states_the_measured_split() -> None:
+    """The participant-facing sentence must equal what the units say, not a remembered number."""
+    body = _read(_README)
+    match = _README_SPLIT_RE.search(body)
+    check(
+        match is not None,
+        "baselines/README.md: the two-binds sentence no longer matches the pattern this test "
+        "pins. Reword the test WITH the prose, or the count goes unchecked again",
+    )
+    if match is None:
+        return
+    total, app, bare = _instruction_path_census()
+    stated_app, stated_total, stated_bare = (int(g) for g in match.groups())
+    check(
+        (stated_app, stated_total, stated_bare) == (app, total, bare),
+        f"baselines/README.md says {stated_app} of {stated_total} name /app/output and "
+        f"{stated_bare} name /output; the units say {app} of {total} and {bare}",
+    )
+
+
+def test_the_readme_split_detector_is_not_vacuous() -> None:
+    """Control: a detector that matches nothing would pass this file silently forever."""
+    good = "spellings — 3 of the 4 `instruction.md` name `/app/output` (x) and 1 name `/output` —"
+    found = _README_SPLIT_RE.search(good)
+    check(found is not None and found.groups() == ("3", "4", "1"),
+          "the README split detector does not read a sentence of the shape it pins")
+    check(_README_SPLIT_RE.search(good.replace("`/app/output`", "`/app/out`")) is None,
+          "the README split detector matches a sentence that names no bound path")
+
+
 def main() -> int:
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for test in tests:

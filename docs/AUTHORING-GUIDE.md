@@ -187,7 +187,7 @@ timeout_sec = 300.0    # time allowed for the checker to run
 [agent]
 timeout_sec = 1800.0   # wall-clock budget for the agent. This is the starting default, NOT a
                        # fixed competition-wide value: raise it for a unit that needs longer.
-                       # Across the 87 public units the declared values run 1200-5400 (63 at
+                       # Across the 86 public units the declared values run 1200-5400 (62 at
                        # 1800, 18 at 2400, 4 at 3600, one at 1200, one at 5400). Whatever you
                        # put here is what the harness enforces for your unit, and it is the
                        # number your instruction.md must quote.

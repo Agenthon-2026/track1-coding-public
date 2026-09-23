@@ -159,7 +159,7 @@ same mounts still works and is what the local harness falls back to (with a warn
 
 The agent must write its output files to `/app/output` within that unit's time limit. The limit
 is `[agent].timeout_sec` in the unit's own `card.toml` and **the card is authoritative** — it is
-not the same for every unit. Across the 87 public units it ranges from 1200 to 5400 seconds;
+not the same for every unit. Across the 86 public units it ranges from 1200 to 5400 seconds;
 1800 is the most common value, not a universal one.
 The checker (`checks/test.sh`) runs **offline** and writes the reward signal itself — do not
 write the reward files yourself.
@@ -310,8 +310,8 @@ supply answers or a mock solve. Runtime depends on your agent and the selected t
    [request-accounting rules](SUBMISSION_CLI.md#rules-for-model-api-use-restricted-mode).
 2. **Docker image.** CLI verb: `solve --task-dir /input --out /app/output`.
 3. **Time limit.** Per task, declared by `[agent].timeout_sec` in that unit's card; the card is
-   authoritative. The value varies by unit — across the 87 public units it ranges from 1200 to
-   5400 seconds (20 to 90 minutes): 63 units at 1800, 18 at 2400, 4 at 3600, one at 1200 and one
+   authoritative. The value varies by unit — across the 86 public units it ranges from 1200 to
+   5400 seconds (20 to 90 minutes): 62 units at 1800, 18 at 2400, 4 at 3600, one at 1200 and one
    at 5400. `[verifier].timeout_sec` (the checker's budget, after your agent exits) and
    `[environment].build_timeout_sec` (the image build) are separate fields with their own values;
    do not read either as the agent's limit.
