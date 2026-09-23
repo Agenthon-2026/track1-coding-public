@@ -316,7 +316,7 @@ supply answers or a mock solve. Runtime depends on your agent and the selected t
    `[environment].build_timeout_sec` (the image build) are separate fields with their own values;
    do not read either as the agent's limit.
    **A run also has ONE total wall-clock allowance for the whole roster** — the platform's
-   ingestion-stage clock, 12 hours in Development (about 8 minutes per unit across 87 units), and
+   ingestion-stage clock, 12 hours in Development (about 8 minutes per unit across 86 units), and
    it is the binding limit, because the per-unit ceilings do not all fit inside it. Units your run
    does not reach before it ends are scored as not passed; see rule 5. The
    [Development runtime guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/main/docs/DEVELOPMENT-RUNTIME.md)
