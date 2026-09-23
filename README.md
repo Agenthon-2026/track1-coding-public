@@ -348,7 +348,7 @@ supply answers or a mock solve. Runtime depends on your agent and the selected t
    canary from it reaches an output.
 
 **Where the full rules live.** There is no separate rules website. The rules that bind a Track 1
-submission are the seven points above, plus:
+submission are the eight points above, plus:
 
 - [`SUBMISSION_CLI.md`](SUBMISSION_CLI.md) — the image contract, the network and model-access
   rules, submission categories, and the reproducibility requirements.
