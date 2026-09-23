@@ -14,7 +14,7 @@ Why this exists
 Public-safety for a unit is ``qfbench2_common.manifest.assert_public_safe``. Its
 per-split rules are deliberate: ``reference/`` is answer-bearing material, so it is
 blocked only for units that are NOT ``public-dev`` -- a practice unit is allowed to ship
-reference VALUES for self-grading. Every one of this repo's 87 units is ``public-dev``.
+reference VALUES for self-grading. Every one of this repo's 86 units is ``public-dev``.
 
 What the split rules leave uncovered is an oracle *implementation* smuggled in under a
 name the hub's four ``_ORACLE_GLOBS`` (``*oracle*``, ``answer_key*``, ``solve.sh``,

@@ -549,7 +549,7 @@ def test_explicit_direct_reference_schema_is_enforced(generic_unit, format_name)
 
 def test_all_current_public_reference_formats_pass_preflight():
     units = sorted((ROOT / "units").glob("*/card.toml"))
-    assert len(units) == 87
+    assert len(units) == 86
     for card in units:
         scoring._preflight_reference_inputs(card.parent)
 

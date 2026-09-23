@@ -8,7 +8,9 @@ everything here is familiar; this page lists the exact deltas so you are never s
 QFBench v1 lives at `../../../../QFBench` in this workspace and at
 <https://github.com/QF-Bench/QuantitativeFinance-Bench> (site: <https://qfbench.com>). The 87
 public Track-1 units were migrated from QFBench's 87 tasks by `main/scripts/migrate_track1.py`
-(run from the workspace root; see that repo's `main/scripts/README.md`).
+(run from the workspace root; see that repo's `main/scripts/README.md`). One of them,
+`t1-polars-api-migration`, was later withdrawn from the Development roster, so this repo
+ships 86.
 
 ---
 
