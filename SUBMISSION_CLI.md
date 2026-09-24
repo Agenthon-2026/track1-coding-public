@@ -37,11 +37,11 @@ window; setup/provisioning and container creation/execution after activation can
 retrying under the same allocation resets neither the window nor request counters. Credentials
 last at most 7,200 seconds from issue and never beyond that fixed end. Deployment and verification
 remain required before opening; this changes no compute allowance.
-See the [Development runtime guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.3/docs/DEVELOPMENT-RUNTIME.md)
+See the [Development runtime guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/main/docs/DEVELOPMENT-RUNTIME.md)
 for applied limits and pending access status. Development settings do not certify Final resources.
 
 Build a `linux/amd64` image identified by its immutable digest. Follow the
-[image submission guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.3/docs/IMAGE-SUBMISSIONS.md)
+[image submission guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/main/docs/IMAGE-SUBMISSIONS.md)
 for anonymous public pulls and the organizer confirmation required before using a private mirror.
 A descriptor category or image-access field does not itself make a service available.
 
@@ -50,7 +50,7 @@ A descriptor category or image-access field does not itself make a service avail
 An upload is a **zip, not an image reference**. Push your `linux/amd64` image to a registry that
 allows anonymous pulls by digest (the image submission guide above), write `submission.json`
 with that digest (the sealed descriptor, see the
-[descriptor guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.3/starter-packs/track1/SUBMISSION-DESCRIPTOR.md)),
+[descriptor guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/main/starter-packs/track1/SUBMISSION-DESCRIPTOR.md)),
 then let the toolkit seal and pack it:
 
 ```bash
@@ -59,7 +59,7 @@ qfbench2 submission pack --descriptor submission.json --team-number <your team n
 
 `pack` asks for your Team Key on a hidden prompt, derives your `team_id`, and writes
 `submission.zip` containing `submission.json` and `team-claim.json` -- the
-[team-claim guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.3/starter-packs/track1/TEAM-CLAIM.md)
+[team-claim guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/main/starter-packs/track1/TEAM-CLAIM.md)
 explains the claim and what happens when it is wrong. Upload `submission.zip` on this track's
 CodaBench competition page from your team's designated CodaBench account; the page link was
 issued to registered teams at the Development opening and is in the participant announcements.

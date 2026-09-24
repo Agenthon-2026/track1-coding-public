@@ -217,7 +217,7 @@ Then upload `submission.zip` on the track's CodaBench competition page from your
 designated CodaBench account. The page link was issued to registered teams at the Development
 opening and is in the participant announcements. `SUBMISSION_CLI.md` in this repo documents the
 image contract and the upload mechanics ("How an upload is made"), and the hub's
-[team-claim guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.3/starter-packs/track1/TEAM-CLAIM.md)
+[team-claim guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/main/starter-packs/track1/TEAM-CLAIM.md)
 explains the `team-claim.json` the zip carries.
 
 ---
@@ -324,9 +324,9 @@ supply answers or a mock solve. Runtime depends on your agent and the selected t
 4. **Resources.** A 16-CPU quota, 128 GiB RAM, and GPU access for permitted local code.
    Every unit card declares this in `[environment]` (`cpus = 16`, `memory = "128G"`, `gpu = true`); the card is authoritative.
    The `api` category does not remove its GPU grant. See the
-   [Development runtime guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.3/docs/DEVELOPMENT-RUNTIME.md)
+   [Development runtime guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/main/docs/DEVELOPMENT-RUNTIME.md)
    for the separate unit, platform-stage and House deadlines, temporary space and output limits,
-   and the [image guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/v2.4.3/docs/IMAGE-SUBMISSIONS.md)
+   and the [image guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/main/docs/IMAGE-SUBMISSIONS.md)
    for public pulls and organizer-confirmed private mirrors. Final resources are announced separately.
    The planned House timing release activates each unit once when the organizer begins that unit's execution setup. Queue waiting and earlier units do not spend its window, while setup/provisioning and
    container creation/execution after activation can. The card/fallback ceiling and remaining
