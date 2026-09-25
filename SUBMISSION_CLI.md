@@ -68,7 +68,8 @@ The Team Key never goes into the zip and is never sent to anyone.
 ## Development submission limits
 
 At the participant Development opening, **Track 1 allows 1 upload per team per day**,
-with **20 total uploads per team for this track during Development**. Upload through your
+with **23 total uploads per team for this track during Development** (raised from 20 on
+25 September 2026 at 05:00 UTC, with README rule 9). Upload through your
 team's single designated CodaBench account. Held or cancelled uploads count even when they
 receive no score; local validation and packaging use no attempts. An upload the platform marks
 `Failed` does not consume an attempt — the platform's daily count excludes it. Track 1 has a 1-per-day limit;
@@ -121,8 +122,11 @@ stays `none`. For the agent tracks, every submission declares one category in `s
 | `api` | prompts / harness / system-prompts / agents (your contribution is the scaffolding) | the **house endpoint only**, via the proxy | the task card's CPU and GPU grant |
 
 **Every submission runs against the House model.** Submitting your own model or adapter is not
-part of this competition, so `api` is the category for every agent-track entry (if your agent
-calls no model at all, declare `api` and leave `models` empty). The former `byo-small` /
+part of this competition, so `api` is the category for every agent-track entry. On Track 1 your
+agent must use the House model to solve each task: from 5 October 2026, 00:00 AoE (12:00 UTC), a task counts as passed only
+if your agent used the House model to solve it at run time; a call made only to meet this rule,
+followed by a prepared answer, does not count (README rule 9). A submission that calls no model
+still declares `api` with `models` empty and validates, but on Track 1 it earns no credit. The former `byo-small` /
 `byo-large` values are invalid since toolkit 2.4.3 (`CATEGORIES = ("api", "simulator")` in
 `qfbench2_common.contracts.descriptor`): `qfbench2 submission pack` refuses them, and an upload
 that still carries one is held by the organizer's intake and never run.

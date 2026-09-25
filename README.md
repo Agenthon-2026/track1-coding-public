@@ -339,16 +339,32 @@ supply answers or a mock solve. Runtime depends on your agent and the selected t
    (pass@3 with bootstrap CIs exists only in the offline Harbor report.)
 6. **Baseline.** None. Entries are ranked against each other on pass@1 over the `private-test` split.
 7. **Data cutoff.** Each task card declares a `data_cutoff`; agents must not use data beyond it.
-8. **Your own solutions to public units may travel in your image.** An image may carry your
-   team's own solutions to public Development units and use them as in-context examples when it
-   solves other units — that is part of the prompts/harness, in Development and in the Final
-   alike. The canary rule is unchanged: the g2 gate flags any canary GUID from the registry that
-   appears in an agent's output file, not only the target unit's, and that is a
-   `CONTAMINATION_CANARY` disqualification. If you carry unit material, it is on you that no
-   canary from it reaches an output.
+8. **Your own solutions to public units may travel in your image, for other units only.** An image
+   may carry your team's own solutions to public Development units and use them as in-context
+   examples when it solves other units; that is part of the prompts/harness, in Development and in
+   the Final alike. It may not use them on the unit they solve: no stored answer, and no complete
+   solution written in advance for that unit, however your image recognises the unit (by its id or
+   by its content). Handing the stored answer to the model to reproduce is not allowed either.
+   General-purpose code, libraries and algorithm components are fine. The canary rule is unchanged:
+   the g2 gate flags any canary GUID from the registry that appears in an agent's output file, not
+   only the target unit's, and that is a `CONTAMINATION_CANARY` disqualification. If you carry unit
+   material, it is on you that no canary from it reaches an output.
+9. **A pass must come from your agent's own work with the House model, at run time.** Track 1
+   measures agents that use the House model to solve each task while they run. A task counts as
+   passed only if your agent used the House model to solve it in that run; a call made only to meet
+   this rule, followed by a prepared answer, does not count. A submission that calls no model
+   (`models: []`) still validates and runs, but it earns no credit on Track 1. Correctness is still
+   decided by the checker; this rule decides which passes count. The organizers check compliance.
+
+   **When rules 8 and 9 apply.** Rule 8 was clarified and rule 9 added on 25 September 2026 at 05:00 UTC; both
+   apply from 5 October 2026, 00:00 AoE (12:00 UTC). From then the Track 1 leaderboard on agenthon.net ranks
+   only runs uploaded after 25 September 2026 at 05:00 UTC, for every team, and every run that counts, in
+   Development and in the Final, must meet both rules. To make room for resubmitting, every team's
+   Track 1 Development total rises from 20 to 23 uploads from 25 September 2026 at 05:00 UTC; the one-a-day limit
+   is unchanged.
 
 **Where the full rules live.** There is no separate rules website. The rules that bind a Track 1
-submission are the eight points above, plus:
+submission are the nine points above, plus:
 
 - [`SUBMISSION_CLI.md`](SUBMISSION_CLI.md) — the image contract, the network and model-access
   rules, submission categories, and the reproducibility requirements.
@@ -395,7 +411,9 @@ favour of the one uploaded earlier.
 Registration and Development close together on October 12, 2026 at **23:59 Anywhere on Earth (AoE, UTC−12)**. The joint Final + Verification phase closes on October 25, 2026 at **23:59 AoE**. Other competition dates and task/data cutoffs are unchanged.
 
 At the participant Development opening, Track 1 allows **1 upload per team per day**
-and **20 total uploads per team for this track during Development**. Use your team's single
+and **23 total uploads per team for this track during Development** (raised from 20 on
+25 September 2026 at 05:00 UTC, with rule 9).
+Use your team's single
 designated CodaBench account. Local validation and packaging use no attempts; held or cancelled
 uploads still count. An upload the platform marks `Failed` does not consume an attempt — the platform's
 daily count excludes it. See [submission limits](SUBMISSION_CLI.md#development-submission-limits).
