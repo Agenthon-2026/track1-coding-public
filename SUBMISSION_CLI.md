@@ -88,7 +88,7 @@ internet** in official scoring.
 
 | Mode | Who | Meaning |
 |---|---|---|
-| `none` | **Simulation (T3)** | Fully offline (`--network=none`). Exactly the historical closed-resource behavior; any attempted outbound connection fails the run. |
+| `none` | **Simulation (T3)** | Fully offline (`--network=none`). Exactly the historical closed-resource behavior; the container has no network, so any outbound connection attempt fails. |
 | `restricted` | **Agent tracks (T1 coding, T2 forecasting, T4 Explainability)** | No open internet. Egress **only** through the organizer's audited proxy to the **organizer-hosted model endpoint** given by `MODEL_ENDPOINT` (open models, free to use, per-run budget). Every connection is logged (domain, bytes, timestamps); the log is the audit artifact for verification within the joint Final + Verification phase. |
 
 > ### ⚠️ Agent tracks: there is no third-party model-API access
@@ -214,10 +214,11 @@ everything else to `simulate`. Six of the public dev units (`t3-gbatch-*`) are b
 
 **Contract invariants (enforced by gate `g0_integrity` / `g1_schema` / `g2_cutoff_resource`):**
 
-1. The image must honor the card's network mode: `none` (simulation) means fully offline — any
-   attempted outbound connection fails the run; `restricted` (agent tracks) means egress only
-   through the audited proxy to the house model endpoint — any connection outside that allowlist
-   fails the run, and no vendor model API is on it.
+1. The image must honor the card's network mode: `none` (simulation) means fully offline — the
+   container has no network, so any outbound connection attempt fails; `restricted` (agent tracks)
+   means egress only through the audited proxy to the house model endpoint — a connection to
+   anything outside that allowlist is refused, every connection is logged, and no vendor model API
+   is on the allowlist.
 2. Output must validate against the track output schema *before* any scoring (`g1_schema`).
 3. The image must not read any path outside `/input` and `/output`; the canary registry and held-out
    targets are never mounted.

@@ -63,9 +63,8 @@ git clone https://github.com/Agenthon-2026/track1-coding-public.git
 cd track1-coding-public
 
 # Install the shared scoring toolkit (inherits from the main repo).
-# Pin toolkit v2.4.3 for the current submission commands and fixtures.
-# The installed package reports version 2.4.2.
-pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.4.3#subdirectory=common"
+# Pin toolkit v2.5.1 for the current submission commands and fixtures.
+pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.5.1#subdirectory=common"
 
 # Make THIS repo's track package importable. `qfbench2 smoke --track coding` loads
 # qfbench2_track_coding, which lives here and is not part of the toolkit; without this the
@@ -273,7 +272,7 @@ Full scoring code is in `qfbench2_track_coding/scoring.py`. It inherits all shar
 `qfbench2-common` toolkit. Install it with:
 
 ```bash
-pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.4.3#subdirectory=common"
+pip install "qfbench2-common @ git+https://github.com/Agenthon-2026/Agenthon2026-public.git@v2.5.1#subdirectory=common"
 ```
 
 ---
