@@ -27,6 +27,10 @@ The harness logs `sha256(image)` (anti-cheat), applies the card's CPU, memory, G
 settings, and mounts only files whose `manifest.json` checksum matches.
 `LABEL qfbench2.interface_version="2.0"` is required on the image.
 
+The Final cannot run an image that declares a Docker `VOLUME`, including one inherited from its base
+image. Such an upload is marked Failed when its run starts and does not use an attempt; remove the
+`VOLUME` (or choose another base image) and upload again.
+
 For Development, Coding and Explainability take the per-unit timeout from `[agent].timeout_sec`;
 Forecasting and Simulation use the launcher's 1,800-second fallback where no timeout is supplied.
 The unit clock includes container creation and an image pull when needed. The ingestion stage
@@ -154,9 +158,12 @@ server or change the adapter eligibility rules above.
    aliases (`*-latest`) are not reproducible and are rejected at verification.
 3. **Disclose training cutoffs.** The training cutoff of every model used MUST be declared in
    submission metadata (`models[].training_cutoff` in `submission.json`).
-4. **Pin temperature/seed** where the API supports it. Entries are verified
-   *statistically* (bootstrap-CI overlap on organizer rerun for T2/T3/T4; for T1, the single-pass
-   per-unit verdicts must agree exactly).
+4. **Fix sampling settings in your code**, for example a fixed temperature (it need not be 0).
+   A seed is recommended, not required; the organizer rerun sets a fresh `QFBENCH_SEED`, so a
+   seed meant to repeat must be a constant in your code. Entries are verified
+   *statistically* on organizer rerun for T2/T3/T4 (bootstrap-CI overlap). For T1, what has to
+   match on a rerun is the submitted image and program, not the House model's answers: a per-unit
+   verdict that differs only because the House model answered differently is not a violation.
 5. **House API allocation — the budget is requests per unit.** The House allowance is
    **25 admitted requests per unit**, with **at most 4,000 output tokens per call**; both are
    counted and applied by the House route. Omitted output limits use 4,000; larger limits are
@@ -224,6 +231,9 @@ everything else to `simulate`. Six of the public dev units (`t3-gbatch-*`) are b
    targets are never mounted.
 4. Determinism: the harness sets `QFBENCH_SEED`; organizer verification within the joint Final + Verification phase
    reruns on fresh seeds/resamples and compares against the final-submission result (reproducibility gate).
+   Because the rerun's `QFBENCH_SEED` is fresh, a seed meant to repeat must be a constant in your code.
+   Track 1: what has to match on the rerun is the submitted image and program, not the House model's answers,
+   so a per-unit verdict that differs only because the House model answered differently is not a violation.
 5. Wall-clock and resource caps are per-track (`card.environment`); exceeding them is a `g2` failure.
 6. **T2 text cutoff (g2):** every document in `/input/text/` must have a timestamp field ≤ `--asof`.
    The harness checks text timestamps in addition to panel data timestamps. A document with a

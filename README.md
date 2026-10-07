@@ -212,6 +212,10 @@ Push your `linux/amd64` image to a registry that allows anonymous pulls by diges
 qfbench2 submission pack --descriptor submission.json --team-number <your team number> --out submission.zip
 ```
 
+The Final cannot run an image that declares a Docker `VOLUME`, including one inherited from its base
+image. Such an upload is marked Failed when its run starts and does not use an attempt; remove the
+`VOLUME` (or choose another base image) and upload again.
+
 Then upload `submission.zip` on the track's CodaBench competition page from your team's
 designated CodaBench account. The page link was issued to registered teams at the Development
 opening and is in the participant announcements. `SUBMISSION_CLI.md` in this repo documents the
@@ -319,8 +323,9 @@ supply answers or a mock solve. Runtime depends on your agent and the selected t
    (policy 2026-08-04), and no participant API keys exist. Vendor-side tools (web search, code
    execution, retrieval) must be disabled. Fetching data, packages, or web pages is impossible.
    Every connection is logged and audited. Model versions must be pinned (dated snapshots) and
-   each model's training cutoff disclosed in the submission metadata; temperature/seed pinned
-   where the API supports it. Every submission runs against the House model: `category` is
+   each model's training cutoff disclosed in the submission metadata. Sampling settings must be
+   fixed in your code (for example a fixed temperature); a seed is recommended, not required.
+   Every submission runs against the House model: `category` is
    `api` (house endpoint only; your contribution is the prompts/harness). **Bring-your-own
    models and adapters are not part of this competition** (ruling of 2026-09-18); the former
    `byo-large` / `byo-small` values are invalid since toolkit 2.4.3, and an upload that still
