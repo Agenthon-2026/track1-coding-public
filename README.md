@@ -355,7 +355,9 @@ supply answers or a mock solve. Runtime depends on your agent and the selected t
    [Development runtime guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/main/docs/DEVELOPMENT-RUNTIME.md)
    for the separate unit, platform-stage and House deadlines, temporary space and output limits,
    and the [image guide](https://github.com/Agenthon-2026/Agenthon2026-public/blob/main/docs/IMAGE-SUBMISSIONS.md)
-   for public pulls and organizer-confirmed private mirrors. Final resources are announced separately.
+   for anonymous public pulls. There's no private-image route in Agenthon 2026: your image must be
+   anonymously pullable. A public image can be pulled by anyone, including the files and model
+   artifacts inside it; leave out anything you don't want to share. Final resources are announced separately.
    The planned House timing release activates each unit once when the organizer begins that unit's execution setup. Queue waiting and earlier units do not spend its window, while setup/provisioning and
    container creation/execution after activation can. The card/fallback ceiling and remaining
    actual ingestion-stage time cap its fixed end; restart/retry does not renew the window or
