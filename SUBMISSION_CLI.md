@@ -83,9 +83,9 @@ receive no score; local validation and packaging use no attempts. An upload the 
 Tracks 2, 3 and 4 retain 5 per day.
 
 Development runs through **October 12, 2026**. The joint **Final + Verification phase runs
-October 13–25, 2026**. Each team makes **one final submission per track**; organizers perform
-verification within that same phase, with no separate participant Verification submission.
-Registration and Development close together on October 12, 2026 at **23:59 Anywhere on Earth (AoE, UTC−12)**. The joint Final + Verification phase closes on October 25, 2026 at **23:59 AoE**. Other competition dates and task/data cutoffs are unchanged.
+October 13–25, 2026**. Each team makes **one final submission per track**, with no separate
+participant Verification submission.
+Registration and Development close together on October 12, 2026 at **23:59 Anywhere on Earth (AoE, UTC−12)**. Final uploads close on October 25, 2026 at **23:59 AoE** (October 26, 11:59 UTC). An upload made by then runs and counts even if its run finishes after the close; organizers verify the top entries after their runs, so verification can end after October 25. **Keep your image pullable until the results are published.** Other competition dates and task/data cutoffs are unchanged.
 See the [Development submission limits](https://github.com/Agenthon-2026/Agenthon2026-public/blob/main/docs/DEVELOPMENT-RUNTIME.md#submission-limits-at-the-development-opening).
 
 ## Network modes (per unit card, `[environment].network`)
@@ -96,7 +96,7 @@ internet** in official scoring.
 | Mode | Who | Meaning |
 |---|---|---|
 | `none` | **Simulation (T3)** | Fully offline (`--network=none`). Exactly the historical closed-resource behavior; the container has no network, so any outbound connection attempt fails. |
-| `restricted` | **Agent tracks (T1 coding, T2 forecasting, T4 Explainability)** | No open internet. Egress **only** through the organizer's audited proxy to the **organizer-hosted model endpoint** given by `MODEL_ENDPOINT` (open models, free to use, per-run budget). Every connection is logged (domain, bytes, timestamps); the log is the audit artifact for verification within the joint Final + Verification phase. |
+| `restricted` | **Agent tracks (T1 coding, T2 forecasting, T4 Explainability)** | No open internet. Egress **only** through the organizer's audited proxy to the **organizer-hosted model endpoint** given by `MODEL_ENDPOINT` (open models, free to use, per-run budget). Every connection is logged (domain, bytes, timestamps); the log is the audit artifact for organizer verification. |
 
 > ### ⚠️ Agent tracks: there is no third-party model-API access
 >
@@ -232,7 +232,7 @@ everything else to `simulate`. Six of the public dev units (`t3-gbatch-*`) are b
 2. Output must validate against the track output schema *before* any scoring (`g1_schema`).
 3. The image must not read any path outside `/input` and `/output`; the canary registry and held-out
    targets are never mounted.
-4. Determinism: the harness sets `QFBENCH_SEED`; organizer verification within the joint Final + Verification phase
+4. Determinism: the harness sets `QFBENCH_SEED`; organizer verification
    reruns on fresh seeds/resamples and compares against the final-submission result (reproducibility gate).
    Because the rerun's `QFBENCH_SEED` is fresh, a seed meant to repeat must be a constant in your code.
    Track 1: what has to match on the rerun is the submitted image and program, not the House model's answers,
