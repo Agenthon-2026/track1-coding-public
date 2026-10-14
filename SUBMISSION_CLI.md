@@ -72,6 +72,9 @@ CodaBench competition page from your team's designated CodaBench account; the pa
 issued to registered teams at the Development opening and is in the participant announcements.
 The Team Key never goes into the zip and is never sent to anyone.
 
+**On Windows, run the toolkit inside WSL** (Windows Subsystem for Linux); it is not tested on
+native Windows.
+
 ## Development submission limits
 
 At the participant Development opening, **Track 1 allows 1 upload per team per day**,
