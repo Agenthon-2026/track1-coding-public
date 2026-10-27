@@ -86,9 +86,9 @@ receive no score; local validation and packaging use no attempts. An upload the 
 Tracks 2, 3 and 4 retain 5 per day.
 
 Development runs through **October 12, 2026**. The joint **Final + Verification phase runs
-October 13–25, 2026**. Each team makes **one final submission per track**, with no separate
+October 13–27, 2026**. Each team makes **one final submission per track**, with no separate
 participant Verification submission.
-Registration and Development close together on October 12, 2026 at **23:59 Anywhere on Earth (AoE, UTC−12)**. Final uploads close on October 25, 2026 at **23:59 AoE** (October 26, 11:59 UTC). An upload made by then runs and counts even if its run finishes after the close; organizers verify the top entries after their runs, so verification can end after October 25. **Keep your image pullable until the results are published.** Other competition dates and task/data cutoffs are unchanged.
+Registration and Development close together on October 12, 2026 at **23:59 Anywhere on Earth (AoE, UTC−12)**. Final uploads close on October 27, 2026 at **23:59 AoE** (October 28, 11:59 UTC). An upload made by then runs and counts even if its run finishes after the close; organizers verify the top entries after their runs, so verification can end after October 27. **Keep your image pullable until the results are published.** Other competition dates and task/data cutoffs are unchanged.
 See the [Development submission limits](https://github.com/Agenthon-2026/Agenthon2026-public/blob/main/docs/DEVELOPMENT-RUNTIME.md#submission-limits-at-the-development-opening).
 
 ## Network modes (per unit card, `[environment].network`)
