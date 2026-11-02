@@ -98,6 +98,22 @@ Columns:
 - `dollars_sold_over_adv20_dollar_volume`
 - `liquidation_score`
 
+Compute the entity-day score from decimal-fraction ratios (for example, 25% is
+`0.25`), using the following fixed coefficients and basis-point scale:
+
+```text
+liquidation_score = 10000 * (
+    0.55 * pct_inventory_sold
+  + 0.25 * shares_sold_over_adv20
+  + 0.20 * dollars_sold_over_adv20_dollar_volume
+)
+```
+
+Here `pct_inventory_sold = shares_sold / inventory_before_trading`,
+`shares_sold_over_adv20 = shares_sold / adv20_shares`, and
+`dollars_sold_over_adv20_dollar_volume = gross_proceeds / (adv20_shares * close_price)`.
+Use the market-context row for the same filing and transaction date.
+
 ### 4. `issuer_pressure_scenarios.csv`
 
 One row per issuer-day observation.
@@ -120,6 +136,28 @@ Columns:
 - `sale_shares_over_outstanding`
 - `sale_shares_over_reported_inventory`
 - `blended_pressure_score`
+
+Compute the issuer-day score on the same decimal-fraction and basis-point scales:
+
+```text
+blended_pressure_score = 10000 * (
+    0.24 * sale_shares_over_day_volume
+  + 0.20 * sale_shares_over_adv20
+  + 0.12 * sale_dollars_over_adv20_dollar_volume
+  + 0.24 * sale_shares_over_reported_inventory
+  + 0.12 * sale_shares_over_float
+  + 0.08 * seller_concentration_hhi
+)
+```
+
+For that issuer-day, the first three ratios divide `shares_sold` by
+`daily_volume_shares`, `shares_sold` by `adv20_shares`, and `gross_proceeds` by
+`adv20_shares * close_price`, respectively. The reported-inventory denominator is
+the sum of `inventory_before_trading` across that day's selling entities; exclude
+static-only holdings. Divide `shares_sold` by `float_shares` for the float ratio.
+For seller concentration, let each selling entity's share be its `shares_sold`
+divided by total issuer-day `shares_sold`; `seller_concentration_hhi` is the sum
+of those shares squared. Use these scores consistently in the rankings and summary.
 
 ### 5. `cross_sectional_rankings.csv`
 

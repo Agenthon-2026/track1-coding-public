@@ -2,7 +2,7 @@
   "lookback_alpha": 60,
   "lookback_risk": 252,
   "max_gross_leverage": 2.0,
-  "max_position_pct": 0.1,
+  "max_position_pct": 0.2,
   "transaction_cost_bps": 5,
   "rebalance_frequency": "monthly",
   "annualization_factor": 252,

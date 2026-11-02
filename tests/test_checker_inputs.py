@@ -1,6 +1,7 @@
-"""Organizer input mounts are restored between units, just like output mounts."""
+"""Organizer inputs must be consistent, and their mounts restored between units."""
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -54,3 +55,28 @@ def test_populated_input_mount_is_not_overwritten(tmp_path, monkeypatch):
         with scoring._present_inputs(tmp_path, "open(" + json.dumps(str(target)) + ")"):
             pytest.fail("must not enter the checker")
     assert (target / "untouched").read_text() == "original"
+
+
+ALPHA_UNIT = Path(__file__).resolve().parents[1] / "units" / "t1-alpha-hedge-strategy"
+
+
+@pytest.mark.parametrize("leg", ["long", "short"])
+def test_alpha_required_position_weight_obeys_position_cap(leg: str) -> None:
+    params = json.loads((ALPHA_UNIT / "environment/data/params.json").read_text())
+    weight = params[f"{leg}_weight_per_stock"]
+    cap = params["max_position_pct"]
+
+    assert 0 < weight <= cap, (
+        f"The prescribed {leg} weight {weight} exceeds the per-stock cap {cap}; "
+        "a participant cannot obey both sizing rules."
+    )
+
+
+def test_alpha_required_portfolio_obeys_gross_leverage_cap() -> None:
+    params = json.loads((ALPHA_UNIT / "environment/data/params.json").read_text())
+    gross = (
+        params["long_top_n"] * params["long_weight_per_stock"]
+        + params["short_bottom_n"] * params["short_weight_per_stock"]
+    )
+
+    assert gross <= params["max_gross_leverage"]
